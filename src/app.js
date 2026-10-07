@@ -106,6 +106,25 @@ const state = {
 function setStatus(text, isError = false) {
   $('status').textContent = text;
   $('status').classList.toggle('error', isError);
+  if (isError) setPanelOpen($('left'), true); // don't hide errors inside a collapsed panel
+}
+
+// ------------------------------------------------------------------ panels
+
+const phone = matchMedia('(max-width: 640px)');
+
+function setPanelOpen(panel, open) {
+  panel.classList.toggle('collapsed', !open);
+  panel.querySelector('.toggle').setAttribute('aria-expanded', open);
+  // On phones only one panel fits over the scene at a time.
+  if (open && phone.matches) {
+    for (const other of document.querySelectorAll('.panel')) if (other !== panel) setPanelOpen(other, false);
+  }
+}
+
+for (const panel of document.querySelectorAll('.panel')) {
+  panel.querySelector('.panel-head').addEventListener('click', () => setPanelOpen(panel, panel.classList.contains('collapsed')));
+  if (phone.matches) setPanelOpen(panel, false); // start collapsed so the model gets the screen
 }
 
 function disposeModel() {

@@ -20,6 +20,15 @@
       padding: 12px; backdrop-filter: blur(6px); width: 250px; max-height: calc(100% - 32px); overflow: auto; }
     #left { top: 16px; left: 16px; }
     #right { top: 16px; right: 16px; }
+    .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; cursor: pointer;
+      user-select: none; margin: -4px 0 6px; }
+    .panel-head h1, .panel-head h2 { margin: 0; }
+    .toggle { border: none; padding: 2px 6px; font-size: 14px; line-height: 1; color: var(--muted); }
+    .toggle::before { content: "▴"; }
+    .panel.collapsed { width: auto; padding: 8px 12px; }
+    .panel.collapsed .panel-head { margin: 0; }
+    .panel.collapsed .panel-body { display: none; }
+    .panel.collapsed .toggle::before { content: "▾"; }
     h1 { font-size: 15px; margin: 0 0 10px; }
     h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 14px 0 6px; }
     label { display: flex; align-items: center; gap: 6px; margin: 4px 0; }
@@ -43,8 +52,15 @@
       background: rgba(63, 143, 26, .25); border: 3px dashed var(--accent); pointer-events: none; }
     body.dragging #drop { display: grid; }
     @media (max-width: 640px) {
-      .panel { width: calc(100% - 32px); max-height: 38%; }
-      #right { top: auto; bottom: 16px; }
+      /* Phones: panels collapse to two small tabs at the top; an open one drops down over the scene. */
+      #left { top: 8px; left: 8px; }
+      #right { top: 8px; right: 8px; }
+      .panel { width: auto; max-width: calc(100% - 16px); max-height: 60%; max-height: 60dvh; }
+      .panel:not(.collapsed) { left: 8px; right: 8px; max-width: none; z-index: 1; }
+      .toggle { font-size: 18px; padding: 4px 8px; }
+      select, button { padding: 7px 10px; }
+      label { margin: 6px 0; }
+      .slider input { height: 28px; }
       #help { display: none; }
     }
   </style>
@@ -59,7 +75,8 @@
 </head>
 <body>
   <div id="left" class="panel">
-    <h1>Puppetz Viewer</h1>
+    <div class="panel-head"><h1>Puppetz Viewer</h1><button class="toggle" aria-label="Collapse panel" aria-expanded="true"></button></div>
+    <div class="panel-body">
     <label>Model <select id="model"></select></label>
     <label>Source
       <select id="source">
@@ -81,10 +98,12 @@
     <h2>Export</h2>
     <div class="row"><button id="download">Download GLB</button></div>
     <div id="status"></div>
+    </div>
   </div>
 
   <div id="right" class="panel">
-    <h2 style="margin-top:0">Rig</h2>
+    <div class="panel-head"><h2>Rig</h2><button class="toggle" aria-label="Collapse panel" aria-expanded="true"></button></div>
+    <div class="panel-body">
     <label><input id="showSkeleton" type="checkbox"> Show skeleton</label>
     <label>Bone <select id="bone"></select></label>
     <div class="slider"><span>X</span><input id="rx" type="range" step="1"><output id="rxOut"></output></div>
@@ -96,6 +115,7 @@
     </div>
     <h2>Parts on bone</h2>
     <div id="parts"></div>
+    </div>
   </div>
 
   <div id="help"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / arrows walk · drag to orbit · click a part to select its bone · drop a .glb to load it</div>
