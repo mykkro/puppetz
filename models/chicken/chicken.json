@@ -1,0 +1,194 @@
+{
+  "$schema": "../character.schema.json",
+  "id": "chicken",
+  "name": "Chicken",
+  "description": "Cartoon chicken: egg body, big eyes, wide beak, red comb and tail, wings crossed on the chest, big three-toed feet. Simplified primitive model.",
+  "version": 1,
+  "units": "meters",
+  "up": "+Y",
+  "forward": "+Z",
+  "symmetry": { "left": "_L", "right": "_R" },
+
+  "materials": {
+    "feather":   { "color": "#c67a3a", "roughness": 0.7 },
+    "featherLid":{ "color": "#b86c30", "roughness": 0.7, "doubleSided": true },
+    "neck":      { "color": "#b5532e", "roughness": 0.7 },
+    "red":       { "color": "#e0261d", "roughness": 0.55 },
+    "beak":      { "color": "#f5d33d", "roughness": 0.45 },
+    "beakDark":  { "color": "#e3b12a", "roughness": 0.5 },
+    "leg":       { "color": "#f2d548", "roughness": 0.5 },
+    "claw":      { "color": "#b9bec6", "roughness": 0.4 },
+    "eyeWhite":  { "color": "#ffffff", "roughness": 0.15, "clearcoat": 1 },
+    "pupil":     { "color": "#111111", "roughness": 0.2 },
+    "glint":     { "color": "#ffffff", "emissive": "#ffffff", "emissiveIntensity": 1 }
+  },
+
+  "skeleton": [
+    { "name": "root",       "parent": null,     "position": [0, 0, 0] },
+    { "name": "hips",       "parent": "root",   "position": [0, 0.44, 0] },
+    { "name": "spine",      "parent": "hips",   "position": [0, 0.02, 0],  "limits": { "x": [-25, 35], "y": [-40, 40], "z": [-20, 20] } },
+    { "name": "chest",      "parent": "spine",  "position": [0, 0.2, 0],   "limits": { "x": [-20, 25], "y": [-30, 30], "z": [-15, 15] } },
+    { "name": "neck",       "parent": "chest",  "position": [0, 0.1, 0.06], "limits": { "x": [-40, 40], "y": [-45, 45], "z": [-25, 25] } },
+    { "name": "head",       "parent": "neck",   "position": [0, 0.13, 0.02], "limits": { "x": [-35, 35], "y": [-80, 80], "z": [-35, 35] } },
+    { "name": "eye_L",      "parent": "head",   "position": [0.085, 0.17, 0.09], "mirror": true },
+    { "name": "tail",       "parent": "spine",  "position": [0, 0.16, -0.2], "limits": { "x": [-40, 40], "y": [-40, 40], "z": [-40, 40] } },
+
+    { "name": "upperArm_L", "parent": "chest",      "position": [0.2, 0, 0.12],  "rotation": [-65, 0, 8],   "tags": ["wing"] },
+    { "name": "foreArm_L",  "parent": "upperArm_L", "position": [0, -0.15, 0],   "rotation": [0, 0, -98],   "tags": ["wing"] },
+    { "name": "hand_L",     "parent": "foreArm_L",  "position": [0, -0.21, 0],   "tags": ["wing"] },
+    { "name": "upperArm_R", "parent": "chest",      "position": [-0.2, 0, 0.12], "rotation": [-85, 0, -8],  "tags": ["wing"] },
+    { "name": "foreArm_R",  "parent": "upperArm_R", "position": [0, -0.15, 0],   "rotation": [0, 0, 98],    "tags": ["wing"] },
+    { "name": "hand_R",     "parent": "foreArm_R",  "position": [0, -0.21, 0],   "tags": ["wing"] },
+
+    { "name": "thigh_L",    "parent": "hips",    "position": [0.11, 0, 0],   "mirror": true, "tags": ["leg"], "limits": { "x": [-90, 45], "y": [-30, 30], "z": [-20, 45] } },
+    { "name": "shin_L",     "parent": "thigh_L", "position": [0, -0.18, 0],  "mirror": true, "tags": ["leg"], "limits": { "x": [0, 140], "y": [0, 0], "z": [0, 0] } },
+    { "name": "foot_L",     "parent": "shin_L",  "position": [0, -0.16, 0],  "mirror": true, "tags": ["leg"], "limits": { "x": [-45, 45], "y": [-25, 25], "z": [-20, 20] } }
+  ],
+
+  "parts": [
+    { "name": "body", "bone": "spine", "material": "feather", "position": [0, 0.08, 0], "scale": [1, 1, 1.1],
+      "geometry": { "type": "sphere", "radius": 0.24 } },
+
+    { "name": "tailFeather1", "bone": "tail", "material": "red", "position": [0, 0.07, -0.085], "rotation": [-45, 0, 0],
+      "geometry": { "type": "cone", "radius": 0.045, "height": 0.22 } },
+    { "name": "tailFeather2", "bone": "tail", "material": "red", "position": [0.04, 0.06, -0.08], "rotation": [-55, 0, -25],
+      "geometry": { "type": "cone", "radius": 0.04, "height": 0.2 } },
+    { "name": "tailFeather3", "bone": "tail", "material": "red", "position": [-0.04, 0.06, -0.08], "rotation": [-55, 0, 25],
+      "geometry": { "type": "cone", "radius": 0.04, "height": 0.2 } },
+    { "name": "tailFeather4", "bone": "tail", "material": "red", "position": [0, 0.02, -0.1], "rotation": [-75, 0, 0],
+      "geometry": { "type": "cone", "radius": 0.035, "height": 0.16 } },
+
+    { "name": "neckSkin", "bone": "neck", "material": "neck", "position": [0, 0.06, 0],
+      "geometry": { "type": "capsule", "radius": 0.045, "length": 0.1 } },
+    { "name": "wattle", "bone": "neck", "material": "red", "position": [0, 0.1, 0.06], "rotation": [160, 0, 0],
+      "geometry": { "type": "cone", "radius": 0.03, "height": 0.09 } },
+    { "name": "wattleSide_L", "bone": "neck", "material": "red", "position": [0.025, 0.07, 0.05], "rotation": [160, 0, 15], "mirror": true,
+      "geometry": { "type": "cone", "radius": 0.025, "height": 0.08 } },
+
+    { "name": "headSkin", "bone": "head", "material": "feather", "position": [0, 0.13, 0], "scale": [1.1, 1, 1],
+      "geometry": { "type": "sphere", "radius": 0.13 } },
+    { "name": "beakUpper", "bone": "head", "material": "beak", "position": [0, 0.07, 0.12], "rotation": [10, 0, 0], "scale": [0.14, 0.055, 0.12],
+      "geometry": { "type": "sphere", "radius": 1 } },
+    { "name": "beakLower", "bone": "head", "material": "beakDark", "position": [0, 0.025, 0.1], "scale": [0.1, 0.05, 0.09],
+      "geometry": { "type": "sphere", "radius": 1 } },
+    { "name": "beakTip", "bone": "head", "material": "beak", "position": [0, 0.02, 0.2], "rotation": [120, 0, 0],
+      "geometry": { "type": "cone", "radius": 0.045, "height": 0.08 } },
+    { "name": "comb1", "bone": "head", "material": "red", "position": [0, 0.31, 0.03], "rotation": [-10, 0, 0],
+      "geometry": { "type": "cone", "radius": 0.035, "height": 0.14 } },
+    { "name": "comb2", "bone": "head", "material": "red", "position": [0, 0.29, -0.04], "rotation": [-35, 0, 0],
+      "geometry": { "type": "cone", "radius": 0.032, "height": 0.12 } },
+    { "name": "comb3", "bone": "head", "material": "red", "position": [0, 0.29, 0.09], "rotation": [20, 0, 0],
+      "geometry": { "type": "cone", "radius": 0.03, "height": 0.1 } },
+
+    { "name": "eyeball_L", "bone": "eye_L", "material": "eyeWhite", "mirror": true,
+      "geometry": { "type": "sphere", "radius": 0.075 } },
+    { "name": "eyelid_L", "bone": "eye_L", "material": "featherLid", "rotation": [-20, 0, -15], "mirror": true,
+      "geometry": { "type": "sphere", "radius": 0.082, "thetaLength": 80 } },
+    { "name": "pupil_L", "bone": "eye_L", "material": "pupil", "position": [-0.012, -0.008, 0.07], "scale": [1, 1, 0.5], "mirror": true,
+      "geometry": { "type": "sphere", "radius": 0.028 } },
+    { "name": "glint_L", "bone": "eye_L", "material": "glint", "position": [0.008, 0.012, 0.074], "castShadow": false, "mirror": true,
+      "geometry": { "type": "sphere", "radius": 0.007, "widthSegments": 8, "heightSegments": 6 } },
+
+    { "name": "shoulderWing_L", "bone": "upperArm_L", "material": "feather", "mirror": true,
+      "geometry": { "type": "sphere", "radius": 0.06 } },
+    { "name": "upperWing_L", "bone": "upperArm_L", "material": "feather", "position": [0, -0.075, 0], "mirror": true,
+      "geometry": { "type": "capsule", "radius": 0.055, "length": 0.1 } },
+    { "name": "foreWing_L", "bone": "foreArm_L", "material": "feather", "position": [0, -0.105, 0], "mirror": true,
+      "geometry": { "type": "capsule", "radius": 0.05, "length": 0.16 } },
+    { "name": "wingFeather1_L", "bone": "hand_L", "material": "featherLid", "position": [0, -0.04, 0], "mirror": true,
+      "geometry": { "type": "capsule", "radius": 0.025, "length": 0.05 } },
+    { "name": "wingFeather2_L", "bone": "hand_L", "material": "featherLid", "position": [0.025, -0.035, 0], "rotation": [0, 0, 20], "mirror": true,
+      "geometry": { "type": "capsule", "radius": 0.025, "length": 0.05 } },
+    { "name": "wingFeather3_L", "bone": "hand_L", "material": "featherLid", "position": [-0.025, -0.035, 0], "rotation": [0, 0, -20], "mirror": true,
+      "geometry": { "type": "capsule", "radius": 0.025, "length": 0.05 } },
+
+    { "name": "thighLeg_L", "bone": "thigh_L", "material": "leg", "position": [0, -0.09, 0], "mirror": true,
+      "geometry": { "type": "capsule", "radius": 0.06, "length": 0.12 } },
+    { "name": "shinLeg_L", "bone": "shin_L", "material": "leg", "position": [0, -0.08, 0], "mirror": true,
+      "geometry": { "type": "cylinder", "radiusTop": 0.065, "radiusBottom": 0.055, "height": 0.16 } },
+    { "name": "ankle_L", "bone": "foot_L", "material": "leg", "mirror": true,
+      "geometry": { "type": "sphere", "radius": 0.05 } },
+    { "name": "toeMid_L", "bone": "foot_L", "material": "leg", "position": [0, -0.055, 0.09], "rotation": [90, 0, 0], "mirror": true,
+      "geometry": { "type": "capsule", "radius": 0.045, "length": 0.1 } },
+    { "name": "toeOut_L", "bone": "foot_L", "material": "leg", "position": [0.042, -0.055, 0.079], "rotation": [90, 28, 0], "rotationOrder": "YXZ", "mirror": true,
+      "geometry": { "type": "capsule", "radius": 0.045, "length": 0.1 } },
+    { "name": "toeIn_L", "bone": "foot_L", "material": "leg", "position": [-0.042, -0.055, 0.079], "rotation": [90, -28, 0], "rotationOrder": "YXZ", "mirror": true,
+      "geometry": { "type": "capsule", "radius": 0.045, "length": 0.1 } },
+    { "name": "toeBack_L", "bone": "foot_L", "material": "leg", "position": [0, -0.065, -0.05], "rotation": [90, 0, 0], "mirror": true,
+      "geometry": { "type": "capsule", "radius": 0.035, "length": 0.04 } },
+    { "name": "clawMid_L", "bone": "foot_L", "material": "claw", "position": [0, -0.055, 0.175], "scale": [1, 0.8, 1], "mirror": true,
+      "geometry": { "type": "sphere", "radius": 0.035 } },
+    { "name": "clawOut_L", "bone": "foot_L", "material": "claw", "position": [0.082, -0.055, 0.154], "scale": [1, 0.8, 1], "mirror": true,
+      "geometry": { "type": "sphere", "radius": 0.035 } },
+    { "name": "clawIn_L", "bone": "foot_L", "material": "claw", "position": [-0.082, -0.055, 0.154], "scale": [1, 0.8, 1], "mirror": true,
+      "geometry": { "type": "sphere", "radius": 0.035 } },
+    { "name": "clawBack_L", "bone": "foot_L", "material": "claw", "position": [0, -0.065, -0.1], "scale": [1, 0.8, 1], "mirror": true,
+      "geometry": { "type": "sphere", "radius": 0.028 } }
+  ],
+
+  "clips": {
+    "idle": {
+      "duration": 3.2, "loop": true, "layer": "base",
+      "tracks": [
+        { "bone": "hips",  "channel": "position", "axis": "y", "wave": { "amp": 0.005, "freq": 2 } },
+        { "bone": "spine", "channel": "rotation", "axis": "x", "wave": { "amp": 1.5, "freq": 2 } },
+        { "bone": "neck",  "channel": "rotation", "axis": "x", "wave": { "amp": 3, "freq": 2, "phase": 0.25 } },
+        { "bone": "head",  "channel": "rotation", "axis": "y", "interp": "linear",
+          "keys": [[0, 0], [0.15, 0], [0.18, 25], [0.45, 25], [0.48, -20], [0.75, -20], [0.78, 0], [1, 0]] },
+        { "bone": "head",  "channel": "rotation", "axis": "z", "interp": "linear",
+          "keys": [[0, 0], [0.3, 0], [0.33, 12], [0.6, 12], [0.63, -6], [0.9, -6], [0.93, 0], [1, 0]] },
+        { "bone": "tail",  "channel": "rotation", "axis": "z", "wave": { "amp": 8, "freq": 2 } },
+        { "bone": "tail",  "channel": "rotation", "axis": "x", "wave": { "amp": 3, "freq": 1 } },
+        { "bone": "foot_R", "channel": "rotation", "axis": "x", "interp": "linear",
+          "keys": [[0, 0], [0.4, 0], [0.45, -15], [0.5, 0], [0.55, -15], [0.6, 0], [1, 0]] },
+        { "bone": "hand_R", "channel": "rotation", "axis": "x", "wave": { "amp": 10, "freq": 4 } }
+      ]
+    },
+
+    "walk": {
+      "duration": 0.7, "loop": true, "layer": "base",
+      "tracks": [
+        { "bone": "hips",  "channel": "position", "axis": "y", "wave": { "amp": 0.03, "freq": 2, "phase": 0.25 } },
+        { "bone": "hips",  "channel": "rotation", "axis": "z", "wave": { "amp": 6, "freq": 1 } },
+        { "bone": "hips",  "channel": "rotation", "axis": "y", "wave": { "amp": 5, "freq": 1, "phase": 0.25 } },
+        { "bone": "spine", "channel": "rotation", "axis": "x", "value": 6 },
+        { "bone": "neck",  "channel": "position", "axis": "z", "interp": "linear",
+          "keys": [[0, 0.04], [0.4, -0.03], [0.5, 0.04], [0.9, -0.03], [1, 0.04]] },
+        { "bone": "head",  "channel": "rotation", "axis": "x", "wave": { "amp": 4, "freq": 2 } },
+        { "bone": "tail",  "channel": "rotation", "axis": "z", "wave": { "amp": 10, "freq": 2, "phase": 0.5 } },
+        { "bone": "upperArm_L", "channel": "rotation", "axis": "x", "wave": { "amp": 14, "freq": 1, "phase": 0.5 } },
+        { "bone": "upperArm_R", "channel": "rotation", "axis": "x", "wave": { "amp": 14, "freq": 1 } },
+        { "bone": "upperArm_L", "channel": "rotation", "axis": "z", "wave": { "amp": 9, "freq": 2, "offset": 10 } },
+        { "bone": "upperArm_R", "channel": "rotation", "axis": "z", "wave": { "amp": -9, "freq": 2, "offset": -10 } },
+        { "bone": "foreArm_L",  "channel": "rotation", "axis": "z", "wave": { "amp": 6, "freq": 2, "phase": 0.6 } },
+        { "bone": "foreArm_R",  "channel": "rotation", "axis": "z", "wave": { "amp": -6, "freq": 2, "phase": 0.6 } },
+        { "bone": "hand_L", "channel": "rotation", "axis": "x", "wave": { "amp": 25, "freq": 4 } },
+        { "bone": "hand_R", "channel": "rotation", "axis": "x", "wave": { "amp": 25, "freq": 4, "phase": 0.25 } },
+
+        { "bone": "thigh_L", "channel": "rotation", "axis": "x", "wave": { "amp": 30, "freq": 1 }, "mirror": { "phase": 0.5 } },
+        { "bone": "shin_L",  "channel": "rotation", "axis": "x",
+          "keys": [[0, 5], [0.25, 8], [0.5, 55], [0.7, 20], [0.8, 4], [1, 5]], "mirror": { "phase": 0.5 } },
+        { "bone": "foot_L",  "channel": "rotation", "axis": "x",
+          "keys": [[0, -3], [0.25, -20], [0.5, -40], [0.75, 10], [0.88, 8], [1, -3]], "mirror": { "phase": 0.5 } }
+      ]
+    },
+
+    "blink": {
+      "duration": 3.7, "loop": true, "layer": "overlay",
+      "tracks": [
+        { "bone": "eye_L", "channel": "scale", "axis": "y", "interp": "linear",
+          "keys": [[0, 1], [0.88, 1], [0.91, 0.1], [0.94, 1], [1, 1]], "mirror": true }
+      ]
+    }
+  },
+
+  "controller": {
+    "states": { "idle": "idle", "walk": "walk" },
+    "overlays": ["blink"],
+    "walkSpeed": 0.85,
+    "turnSpeed": 9,
+    "crossfade": 0.2
+  },
+
+  "view": { "target": [0, 0.64, 0], "distance": 2.7 }
+}

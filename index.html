@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Puppetz Viewer</title>
+  <style>
+    :root {
+      --bg: #d9dde2; --panel: rgba(255, 255, 255, 0.88); --text: #1d2228; --muted: #5f6873;
+      --line: #c9ced4; --accent: #3f8f1a; --accent-text: #fff;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #1b1f24; --panel: rgba(30, 35, 41, 0.9); --text: #e7eaee; --muted: #9aa3ad; --line: #3a424b; --accent: #7ccc3e; --accent-text: #111; }
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); color: var(--text);
+      font: 13px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+    canvas { display: block; }
+    .panel { position: absolute; background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+      padding: 12px; backdrop-filter: blur(6px); width: 250px; max-height: calc(100% - 32px); overflow: auto; }
+    #left { top: 16px; left: 16px; }
+    #right { top: 16px; right: 16px; }
+    h1 { font-size: 15px; margin: 0 0 10px; }
+    h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 14px 0 6px; }
+    label { display: flex; align-items: center; gap: 6px; margin: 4px 0; }
+    select, button { font: inherit; color: var(--text); background: transparent; border: 1px solid var(--line);
+      border-radius: 6px; padding: 4px 8px; }
+    select { width: 100%; }
+    button { cursor: pointer; }
+    button.on { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+    .row { display: flex; gap: 6px; flex-wrap: wrap; }
+    .row > * { flex: 1; }
+    .slider { display: grid; grid-template-columns: 14px 1fr 44px; align-items: center; gap: 6px; }
+    .slider input { width: 100%; }
+    .slider output { text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); }
+    #status { color: var(--muted); margin-top: 8px; min-height: 1.4em; }
+    #status.error { color: #d0412f; }
+    #help { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); color: var(--muted);
+      background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; white-space: nowrap; }
+    kbd { border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; font: 11px ui-monospace, monospace; }
+    body.clean .panel, body.clean #help { display: none; }
+    #drop { position: absolute; inset: 0; display: none; place-items: center; font-size: 20px;
+      background: rgba(63, 143, 26, .25); border: 3px dashed var(--accent); pointer-events: none; }
+    body.dragging #drop { display: grid; }
+    @media (max-width: 640px) {
+      .panel { width: calc(100% - 32px); max-height: 38%; }
+      #right { top: auto; bottom: 16px; }
+      #help { display: none; }
+    }
+  </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="left" class="panel">
+    <h1>Puppetz Viewer</h1>
+    <label>Model <select id="model"></select></label>
+    <label>Source
+      <select id="source">
+        <option value="json">JSON (built live)</option>
+        <option value="glb">GLB file</option>
+      </select>
+    </label>
+
+    <h2>Animation</h2>
+    <div class="row" id="modes">
+      <button data-mode="idle">Idle</button>
+      <button data-mode="walk">Walk</button>
+      <button data-mode="wander">Wander</button>
+    </div>
+    <label class="slider"><span></span><input id="speed" type="range" min="0" max="2" step="0.05" value="1"><output id="speedOut">1.00×</output></label>
+    <label><input id="animate" type="checkbox" checked> Play clips (off = rest pose)</label>
+    <label>Clip <select id="clip"></select></label>
+
+    <h2>Export</h2>
+    <div class="row"><button id="download">Download GLB</button></div>
+    <div id="status"></div>
+  </div>
+
+  <div id="right" class="panel">
+    <h2 style="margin-top:0">Rig</h2>
+    <label><input id="showSkeleton" type="checkbox"> Show skeleton</label>
+    <label>Bone <select id="bone"></select></label>
+    <div class="slider"><span>X</span><input id="rx" type="range" step="1"><output id="rxOut"></output></div>
+    <div class="slider"><span>Y</span><input id="ry" type="range" step="1"><output id="ryOut"></output></div>
+    <div class="slider"><span>Z</span><input id="rz" type="range" step="1"><output id="rzOut"></output></div>
+    <div class="row" style="margin-top:6px">
+      <button id="resetBone">Reset bone</button>
+      <button id="resetAll">Reset all</button>
+    </div>
+    <h2>Parts on bone</h2>
+    <div id="parts"></div>
+  </div>
+
+  <div id="help"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / arrows walk · drag to orbit · click a part to select its bone · drop a .glb to load it</div>
+  <div id="drop">Drop .glb to load</div>
+
+  <script type="module" src="src/app.js"></script>
+</body>
+</html>

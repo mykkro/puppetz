@@ -1,0 +1,7 @@
+{
+  "models": [
+    {"id": "shark", "name": "Shark", "json": "shark/shark.json", "glb": "shark/shark.glb"},
+    {"id": "alzak", "name": "Alzák", "json": "alzak/alzak.json", "glb": "alzak/alzak.glb"},
+    {"id": "chicken", "name": "Chicken", "json": "chicken/chicken.json", "glb": "chicken/chicken.glb"}
+  ]
+}

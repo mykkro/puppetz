@@ -1,0 +1,27 @@
+# Node
+node_modules/
+npm-debug.log*
+
+# Rust / Bevy example
+examples/bevy/target/
+# alternative cargo target dir (used when antivirus blocks examples/bevy/target)
+.cargo-target/
+
+# Python / Panda3D example
+examples/panda3d/.venv/
+__pycache__/
+*.py[cod]
+
+# Screenshots from the examples' --screenshot option
+*.screenshot.png
+shot.png
+
+# Editors / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Note: models/*/*.glb are build outputs of `npm run build:glb`, but they are committed on purpose
+# so the Python and Rust examples work without Node. Rebuild them whenever a model JSON changes.

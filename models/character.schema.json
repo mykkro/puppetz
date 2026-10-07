@@ -1,0 +1,205 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "character.schema.json",
+  "title": "Puppetz character",
+  "description": "A character made of primitive shapes attached to a bone hierarchy, with procedural/keyframed clips. See models/README.md.",
+  "type": "object",
+  "required": ["id", "skeleton", "parts", "materials"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "id": { "$ref": "#/$defs/name", "description": "Unique id; also the root node name and output file name." },
+    "name": { "type": "string" },
+    "description": { "type": "string" },
+    "version": { "type": "integer", "minimum": 1 },
+    "units": { "const": "meters" },
+    "up": { "const": "+Y" },
+    "forward": { "const": "+Z", "description": "Characters face +Z; their left side is +X." },
+    "symmetry": {
+      "type": "object",
+      "description": "Suffixes used by mirror:true to derive the opposite side (X reflection).",
+      "properties": { "left": { "type": "string", "default": "_L" }, "right": { "type": "string", "default": "_R" } },
+      "additionalProperties": false
+    },
+    "materials": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/material" }
+    },
+    "skeleton": { "type": "array", "items": { "$ref": "#/$defs/bone" }, "minItems": 1 },
+    "parts": { "type": "array", "items": { "$ref": "#/$defs/part" } },
+    "clips": { "type": "object", "additionalProperties": { "$ref": "#/$defs/clip" } },
+    "controller": {
+      "type": "object",
+      "properties": {
+        "states": {
+          "type": "object",
+          "description": "Gameplay state -> clip name. The viewer uses 'idle' and 'walk'; add more (run, jump, wave...) freely.",
+          "additionalProperties": { "type": "string" }
+        },
+        "overlays": { "type": "array", "items": { "type": "string" }, "description": "Clips that always play on top (blink, breathing...)." },
+        "walkSpeed": { "type": "number", "description": "m/s matching the walk clip's stride (avoids foot sliding)." },
+        "turnSpeed": { "type": "number", "description": "Heading smoothing factor (1/s)." },
+        "crossfade": { "type": "number", "description": "Seconds to blend between base-layer clips." }
+      },
+      "additionalProperties": false
+    },
+    "view": {
+      "type": "object",
+      "properties": { "target": { "$ref": "#/$defs/vec3" }, "distance": { "type": "number" } },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+
+  "$defs": {
+    "name": { "type": "string", "pattern": "^[A-Za-z0-9_-]+$" },
+    "vec3": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+    "range": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 },
+    "rotationOrder": { "enum": ["XYZ", "XZY", "YXZ", "YZX", "ZXY", "ZYX"] },
+
+    "material": {
+      "type": "object",
+      "properties": {
+        "color": { "type": "string" },
+        "roughness": { "type": "number", "minimum": 0, "maximum": 1 },
+        "metalness": { "type": "number", "minimum": 0, "maximum": 1 },
+        "emissive": { "type": "string" },
+        "emissiveIntensity": { "type": "number" },
+        "opacity": { "type": "number", "minimum": 0, "maximum": 1 },
+        "clearcoat": { "type": "number", "minimum": 0, "maximum": 1 },
+        "clearcoatRoughness": { "type": "number", "minimum": 0, "maximum": 1 },
+        "flatShading": { "type": "boolean" },
+        "doubleSided": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+
+    "bone": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "$ref": "#/$defs/name" },
+        "parent": { "type": ["string", "null"], "description": "Must be declared earlier. null = attached to the character root." },
+        "position": { "$ref": "#/$defs/vec3", "description": "Joint position relative to the parent joint (rest pose)." },
+        "rotation": { "$ref": "#/$defs/vec3", "description": "Rest-pose Euler angles in degrees." },
+        "rotationOrder": { "$ref": "#/$defs/rotationOrder" },
+        "scale": { "oneOf": [{ "type": "number" }, { "$ref": "#/$defs/vec3" }] },
+        "mirror": { "type": "boolean", "description": "Also create the opposite-side bone (name must end with a side suffix)." },
+        "limits": {
+          "type": "object",
+          "description": "Allowed manual offset from rest, in degrees, per axis. [0,0] locks the axis (hinge joints).",
+          "properties": { "x": { "$ref": "#/$defs/range" }, "y": { "$ref": "#/$defs/range" }, "z": { "$ref": "#/$defs/range" } },
+          "additionalProperties": false
+        },
+        "tags": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    },
+
+    "part": {
+      "type": "object",
+      "required": ["name", "bone", "material", "geometry"],
+      "properties": {
+        "name": { "$ref": "#/$defs/name" },
+        "bone": { "type": "string" },
+        "material": { "type": "string" },
+        "geometry": { "$ref": "#/$defs/geometry" },
+        "position": { "$ref": "#/$defs/vec3", "description": "Offset from the bone's joint." },
+        "rotation": { "$ref": "#/$defs/vec3" },
+        "rotationOrder": { "$ref": "#/$defs/rotationOrder" },
+        "scale": { "oneOf": [{ "type": "number" }, { "$ref": "#/$defs/vec3" }] },
+        "mirror": { "type": "boolean" },
+        "mirrorFlip": { "type": "boolean", "description": "Mirror with scale.x = -1 (for shapes not symmetric about their own YZ plane)." },
+        "visible": { "type": "boolean" },
+        "castShadow": { "type": "boolean" },
+        "receiveShadow": { "type": "boolean" },
+        "tags": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    },
+
+    "geometry": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": { "enum": ["sphere", "box", "cylinder", "capsule", "cone", "torus", "lathe", "tube", "extrude", "horn"] },
+        "radius": { "type": "number" },
+        "size": { "$ref": "#/$defs/vec3" },
+        "segments": { "type": "integer" },
+        "radiusTop": { "type": "number" },
+        "radiusBottom": { "type": "number" },
+        "height": { "type": "number" },
+        "length": { "type": "number" },
+        "tube": { "type": "number" },
+        "arc": { "type": "number" },
+        "openEnded": { "type": "boolean" },
+        "closed": { "type": "boolean" },
+        "widthSegments": { "type": "integer" },
+        "heightSegments": { "type": "integer" },
+        "radialSegments": { "type": "integer" },
+        "tubularSegments": { "type": "integer" },
+        "capSegments": { "type": "integer" },
+        "phiStart": { "type": "number" },
+        "phiLength": { "type": "number" },
+        "thetaStart": { "type": "number" },
+        "thetaLength": { "type": "number" },
+        "points": { "type": "array", "items": { "type": "array", "items": { "type": "number" } } },
+        "depth": { "type": "number", "description": "extrude: thickness along Z before bevel" },
+        "bevel": { "type": "number", "description": "extrude: rounded edge size (adds 2x to the thickness, 1x to the outline)" },
+        "bevelSegments": { "type": "integer" },
+        "curveSegments": { "type": "integer" },
+        "smooth": { "type": "boolean", "description": "extrude: spline through the outline points instead of straight edges" },
+        "radiusStart": { "type": "number", "description": "horn: radius at the first point" },
+        "radiusEnd": { "type": "number", "description": "horn: radius at the last point (0 = sharp tip)" },
+        "taper": { "type": "number", "description": "horn: taper curve exponent (1 = linear, <1 thick longer, >1 thins quickly)" }
+      },
+      "additionalProperties": false
+    },
+
+    "clip": {
+      "type": "object",
+      "required": ["duration", "tracks"],
+      "properties": {
+        "duration": { "type": "number", "exclusiveMinimum": 0 },
+        "loop": { "type": "boolean", "default": true },
+        "layer": { "enum": ["base", "overlay"], "default": "base" },
+        "fps": { "type": "number", "default": 30, "description": "Bake rate for the exported keyframes." },
+        "tracks": { "type": "array", "items": { "$ref": "#/$defs/track" } }
+      },
+      "additionalProperties": false
+    },
+
+    "track": {
+      "type": "object",
+      "required": ["bone", "channel", "axis"],
+      "properties": {
+        "bone": { "type": "string" },
+        "channel": { "enum": ["rotation", "position", "scale"], "description": "rotation: degrees added to rest; position: meters added to rest; scale: factor multiplied with rest." },
+        "axis": { "enum": ["x", "y", "z"] },
+        "wave": {
+          "type": "object",
+          "description": "offset + amp * sin(2π (freq * t + phase)), t = normalized clip time 0..1. Use integer freq for seamless loops.",
+          "properties": {
+            "amp": { "type": "number" }, "freq": { "type": "number" },
+            "phase": { "type": "number" }, "offset": { "type": "number" }
+          },
+          "additionalProperties": false
+        },
+        "keys": {
+          "type": "array",
+          "description": "[[normalizedTime 0..1, value], ...] sorted by time.",
+          "items": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 }
+        },
+        "value": { "type": "number", "description": "Constant offset for the whole clip." },
+        "interp": { "enum": ["smooth", "linear", "step"], "default": "smooth" },
+        "phase": { "type": "number", "description": "Time shift in cycles (0.5 = half a clip later)." },
+        "absolute": { "type": "boolean", "default": false, "description": "Value replaces the rest value instead of being an offset from it (e.g. scale a hidden prop from 0.01 to 1)." },
+        "mirror": {
+          "description": "Also drive the opposite-side bone (Y/Z rotations and X position are negated). Object form adds a phase shift, e.g. legs in a walk.",
+          "oneOf": [{ "type": "boolean" }, { "type": "object", "properties": { "phase": { "type": "number" } }, "additionalProperties": false }]
+        }
+      },
+      "oneOf": [{ "required": ["wave"] }, { "required": ["keys"] }, { "required": ["value"] }],
+      "additionalProperties": false
+    }
+  }
+}

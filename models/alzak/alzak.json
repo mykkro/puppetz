@@ -1,0 +1,183 @@
+{
+  "$schema": "../character.schema.json",
+  "id": "alzak",
+  "name": "Alzák",
+  "description": "Green alien in a tin-can suit with the 'a' logo, hands on hips. Simplified primitive model.",
+  "version": 1,
+  "units": "meters",
+  "up": "+Y",
+  "forward": "+Z",
+  "symmetry": { "left": "_L", "right": "_R" },
+
+  "materials": {
+    "skin":     { "color": "#79c932", "roughness": 0.45 },
+    "skinDark": { "color": "#2f5f12", "roughness": 0.6 },
+    "metal":    { "color": "#c8ccd1", "metalness": 0.85, "roughness": 0.28 },
+    "metalDark":{ "color": "#8d939a", "metalness": 0.85, "roughness": 0.35 },
+    "logo":     { "color": "#5d636a", "metalness": 0.5, "roughness": 0.4 },
+    "logoInk":  { "color": "#f4f6f7", "roughness": 0.35 },
+    "eyeWhite": { "color": "#ffffff", "roughness": 0.15, "clearcoat": 1 },
+    "pupil":    { "color": "#111111", "roughness": 0.2 },
+    "glint":    { "color": "#ffffff", "emissive": "#ffffff", "emissiveIntensity": 1 }
+  },
+
+  "skeleton": [
+    { "name": "root",       "parent": null,         "position": [0, 0, 0] },
+    { "name": "hips",       "parent": "root",       "position": [0, 0.45, 0] },
+    { "name": "spine",      "parent": "hips",       "position": [0, 0.05, 0],  "limits": { "x": [-25, 35], "y": [-40, 40], "z": [-20, 20] } },
+    { "name": "chest",      "parent": "spine",      "position": [0, 0.30, 0],  "limits": { "x": [-20, 25], "y": [-30, 30], "z": [-15, 15] } },
+    { "name": "neck",       "parent": "chest",      "position": [0, 0.17, 0],  "limits": { "x": [-30, 30], "y": [-45, 45], "z": [-25, 25] } },
+    { "name": "head",       "parent": "neck",       "position": [0, 0.055, 0],  "limits": { "x": [-35, 30], "y": [-70, 70], "z": [-30, 30] } },
+    { "name": "eye_L",      "parent": "head",       "position": [0.125, 0.24, 0.15], "mirror": true, "limits": { "x": [-30, 30], "y": [-35, 35], "z": [-10, 10] } },
+    { "name": "antenna",    "parent": "head",       "position": [0, 0.515, 0],  "limits": { "x": [-45, 45], "y": [-90, 90], "z": [-45, 45] } },
+
+    { "name": "upperArm_L", "parent": "chest",      "position": [0.19, 0.15, 0],  "rotation": [10, 0, 50],  "mirror": true, "tags": ["arm"] },
+    { "name": "foreArm_L",  "parent": "upperArm_L", "position": [0, -0.18, 0],    "rotation": [-15, 0, -74], "mirror": true, "tags": ["arm"], "limits": { "x": [-120, 20], "y": [-60, 60], "z": [-150, 10] } },
+    { "name": "hand_L",     "parent": "foreArm_L",  "position": [0, -0.20, 0],    "rotation": [0, 0, 15],  "mirror": true, "tags": ["arm"] },
+
+    { "name": "thigh_L",    "parent": "hips",       "position": [0.085, 0, 0],    "mirror": true, "tags": ["leg"], "limits": { "x": [-90, 45], "y": [-30, 30], "z": [-20, 45] } },
+    { "name": "shin_L",     "parent": "thigh_L",    "position": [0, -0.17, 0],    "mirror": true, "tags": ["leg"], "limits": { "x": [0, 140], "y": [0, 0], "z": [0, 0] } },
+    { "name": "foot_L",     "parent": "shin_L",     "position": [0, -0.17, 0],    "mirror": true, "tags": ["leg"], "limits": { "x": [-45, 45], "y": [-20, 20], "z": [-20, 20] } }
+  ],
+
+  "parts": [
+    { "name": "can", "bone": "spine", "material": "metal",
+      "geometry": { "type": "lathe", "segments": 48, "points": [[0, -0.1], [0.19, -0.1], [0.215, -0.09], [0.225, -0.07], [0.222, 0.0], [0.212, 0.2], [0.2, 0.4], [0.195, 0.47], [0.17, 0.5], [0.06, 0.51], [0, 0.51]] } },
+    { "name": "canCollar", "bone": "spine", "material": "metal", "position": [0, 0.48, 0], "rotation": [90, 0, 0],
+      "geometry": { "type": "torus", "radius": 0.183, "tube": 0.024 } },
+    { "name": "canRim", "bone": "spine", "material": "metal", "position": [0, -0.08, 0], "rotation": [90, 0, 0],
+      "geometry": { "type": "torus", "radius": 0.218, "tube": 0.018 } },
+    { "name": "canGrooveLow", "bone": "spine", "material": "metalDark", "position": [0, -0.02, 0], "rotation": [90, 0, 0],
+      "geometry": { "type": "torus", "radius": 0.223, "tube": 0.005 } },
+    { "name": "canGrooveHigh", "bone": "spine", "material": "metalDark", "position": [0, 0.42, 0], "rotation": [90, 0, 0],
+      "geometry": { "type": "torus", "radius": 0.199, "tube": 0.005 } },
+
+    { "name": "logoPlate", "bone": "spine", "material": "logo", "position": [0, 0.25, 0.203], "rotation": [-3, 0, 0],
+      "geometry": { "type": "box", "size": [0.13, 0.13, 0.02], "radius": 0.012 } },
+    { "name": "logoBowl", "bone": "spine", "material": "logoInk", "position": [-0.008, 0.236, 0.214],
+      "geometry": { "type": "torus", "radius": 0.025, "tube": 0.009 } },
+    { "name": "logoStem", "bone": "spine", "material": "logoInk", "position": [0.022, 0.243, 0.214],
+      "geometry": { "type": "capsule", "radius": 0.009, "length": 0.042 } },
+    { "name": "logoHook", "bone": "spine", "material": "logoInk",
+      "geometry": { "type": "tube", "radius": 0.009, "points": [[0.022, 0.265, 0.215], [0.014, 0.284, 0.215], [-0.004, 0.29, 0.215], [-0.022, 0.278, 0.215]] } },
+
+    { "name": "neckSkin", "bone": "neck", "material": "skin", "position": [0, 0.03, 0],
+      "geometry": { "type": "cylinder", "radiusTop": 0.042, "radiusBottom": 0.05, "height": 0.1 } },
+
+    { "name": "headSkin", "bone": "head", "material": "skin",
+      "geometry": { "type": "lathe", "segments": 48, "points": [[0, 0], [0.06, 0.005], [0.12, 0.03], [0.17, 0.08], [0.205, 0.15], [0.225, 0.24], [0.228, 0.32], [0.215, 0.4], [0.18, 0.46], [0.12, 0.505], [0.05, 0.525], [0, 0.53]] } },
+    { "name": "mouth", "bone": "head", "material": "skinDark",
+      "geometry": { "type": "tube", "radius": 0.009, "points": [[-0.08, 0.115, 0.17], [-0.04, 0.087, 0.168], [0, 0.078, 0.172], [0.04, 0.087, 0.168], [0.08, 0.115, 0.17]] } },
+
+    { "name": "nose", "bone": "head", "material": "skin", "position": [0, 0.155, 0.198], "scale": [1.3, 0.85, 0.9],
+      "geometry": { "type": "sphere", "radius": 0.034 } },
+    { "name": "nostril_L", "bone": "head", "material": "skinDark", "position": [0.015, 0.143, 0.226], "scale": [1, 0.7, 0.6], "mirror": true,
+      "geometry": { "type": "sphere", "radius": 0.009, "widthSegments": 12, "heightSegments": 8 } },
+
+    { "name": "antennaStalk", "bone": "antenna", "material": "skin", "position": [0, 0.045, 0],
+      "geometry": { "type": "capsule", "radius": 0.014, "length": 0.07 } },
+    { "name": "antennaBall", "bone": "antenna", "material": "skin", "position": [0, 0.1, 0],
+      "geometry": { "type": "sphere", "radius": 0.03 } },
+
+    { "name": "eyeball_L", "bone": "eye_L", "material": "eyeWhite", "mirror": true,
+      "geometry": { "type": "sphere", "radius": 0.105 } },
+    { "name": "pupil_L", "bone": "eye_L", "material": "pupil", "position": [0.025, 0.012, 0.098], "rotation": [-7, 14, 0], "scale": [1, 1, 0.45],
+      "geometry": { "type": "sphere", "radius": 0.026 } },
+    { "name": "pupil_R", "bone": "eye_R", "material": "pupil", "position": [0.025, 0.012, 0.098], "rotation": [-7, 14, 0], "scale": [1, 1, 0.45],
+      "geometry": { "type": "sphere", "radius": 0.026 } },
+    { "name": "glint_L", "bone": "eye_L", "material": "glint", "position": [0.036, 0.03, 0.094], "castShadow": false,
+      "geometry": { "type": "sphere", "radius": 0.008, "widthSegments": 8, "heightSegments": 6 } },
+    { "name": "glint_R", "bone": "eye_R", "material": "glint", "position": [0.036, 0.03, 0.094], "castShadow": false,
+      "geometry": { "type": "sphere", "radius": 0.008, "widthSegments": 8, "heightSegments": 6 } },
+
+    { "name": "shoulder_L", "bone": "upperArm_L", "material": "skin", "mirror": true,
+      "geometry": { "type": "sphere", "radius": 0.048 } },
+    { "name": "upperArmSkin_L", "bone": "upperArm_L", "material": "skin", "position": [0, -0.09, 0], "mirror": true,
+      "geometry": { "type": "capsule", "radius": 0.042, "length": 0.15 } },
+    { "name": "foreArmSkin_L", "bone": "foreArm_L", "material": "skin", "position": [0, -0.1, 0], "mirror": true,
+      "geometry": { "type": "capsule", "radius": 0.039, "length": 0.17 } },
+    { "name": "handSkin_L", "bone": "hand_L", "material": "skin", "position": [0, -0.04, 0], "scale": [0.72, 1, 1.15], "mirror": true,
+      "geometry": { "type": "sphere", "radius": 0.058 } },
+    { "name": "thumb_L", "bone": "hand_L", "material": "skin", "position": [0, -0.022, 0.048], "rotation": [60, 0, 0], "mirror": true,
+      "geometry": { "type": "capsule", "radius": 0.02, "length": 0.03 } },
+
+    { "name": "thighSkin_L", "bone": "thigh_L", "material": "skin", "position": [0, -0.085, 0], "mirror": true,
+      "geometry": { "type": "capsule", "radius": 0.046, "length": 0.14 } },
+    { "name": "shinSkin_L", "bone": "shin_L", "material": "skin", "position": [0, -0.085, 0], "mirror": true,
+      "geometry": { "type": "capsule", "radius": 0.043, "length": 0.14 } },
+    { "name": "bootCuff_L", "bone": "foot_L", "material": "metal", "position": [0, -0.015, 0], "mirror": true,
+      "geometry": { "type": "cylinder", "radiusTop": 0.05, "radiusBottom": 0.058, "height": 0.05 } },
+    { "name": "boot_L", "bone": "foot_L", "material": "metal", "position": [0, -0.05, 0.035], "scale": [0.075, 0.06, 0.115], "mirror": true,
+      "geometry": { "type": "sphere", "radius": 1 } }
+  ],
+
+  "clips": {
+    "idle": {
+      "duration": 4, "loop": true, "layer": "base",
+      "tracks": [
+        { "bone": "hips",  "channel": "position", "axis": "y", "wave": { "amp": 0.006, "freq": 2 } },
+        { "bone": "hips",  "channel": "rotation", "axis": "z", "wave": { "amp": 1.5, "freq": 1 } },
+        { "bone": "thigh_L", "channel": "rotation", "axis": "z", "wave": { "amp": 1.5, "freq": 1, "phase": 0.5 } },
+        { "bone": "thigh_R", "channel": "rotation", "axis": "z", "wave": { "amp": 1.5, "freq": 1, "phase": 0.5 } },
+        { "bone": "spine", "channel": "rotation", "axis": "x", "wave": { "amp": 1.5, "freq": 2, "phase": 0.25 } },
+        { "bone": "chest", "channel": "rotation", "axis": "x", "wave": { "amp": 1.5, "freq": 2 } },
+        { "bone": "head",  "channel": "rotation", "axis": "z", "wave": { "amp": 4, "freq": 1 } },
+        { "bone": "head",  "channel": "rotation", "axis": "x", "wave": { "amp": 2, "freq": 1, "phase": 0.25 } },
+        { "bone": "head",  "channel": "rotation", "axis": "y",
+          "keys": [[0, 0], [0.2, 0], [0.3, 18], [0.5, 18], [0.62, -12], [0.82, -12], [0.93, 0], [1, 0]] },
+        { "bone": "eye_L", "channel": "rotation", "axis": "y",
+          "keys": [[0, 0], [0.17, 0], [0.22, 15], [0.5, 12], [0.58, -15], [0.82, -10], [0.9, 0], [1, 0]], "interp": "linear" },
+        { "bone": "eye_R", "channel": "rotation", "axis": "y",
+          "keys": [[0, 0], [0.17, 0], [0.22, 15], [0.5, 12], [0.58, -15], [0.82, -10], [0.9, 0], [1, 0]], "interp": "linear" },
+        { "bone": "upperArm_L", "channel": "rotation", "axis": "z", "wave": { "amp": 2, "freq": 2 }, "mirror": true },
+        { "bone": "antenna", "channel": "rotation", "axis": "z", "wave": { "amp": 7, "freq": 2, "phase": 0.15 } },
+        { "bone": "antenna", "channel": "rotation", "axis": "x", "wave": { "amp": 5, "freq": 3 } }
+      ]
+    },
+
+    "walk": {
+      "duration": 0.9, "loop": true, "layer": "base",
+      "tracks": [
+        { "bone": "hips",  "channel": "position", "axis": "y", "wave": { "amp": 0.022, "freq": 2, "phase": 0.25, "offset": -0.008 } },
+        { "bone": "hips",  "channel": "rotation", "axis": "y", "wave": { "amp": 6, "freq": 1 } },
+        { "bone": "hips",  "channel": "rotation", "axis": "z", "wave": { "amp": 2.5, "freq": 1, "phase": 0.25 } },
+        { "bone": "spine", "channel": "rotation", "axis": "y", "wave": { "amp": 5, "freq": 1, "phase": 0.5 } },
+        { "bone": "spine", "channel": "rotation", "axis": "x", "wave": { "amp": 1, "freq": 2, "offset": 3 } },
+        { "bone": "head",  "channel": "rotation", "axis": "x", "wave": { "amp": 2.5, "freq": 2, "phase": 0.75 } },
+        { "bone": "head",  "channel": "rotation", "axis": "z", "wave": { "amp": 3, "freq": 1, "phase": 0.75 } },
+
+        { "bone": "thigh_L", "channel": "rotation", "axis": "x", "wave": { "amp": 28, "freq": 1 }, "mirror": { "phase": 0.5 } },
+        { "bone": "shin_L",  "channel": "rotation", "axis": "x",
+          "keys": [[0, 5], [0.25, 8], [0.5, 55], [0.7, 20], [0.8, 4], [1, 5]], "mirror": { "phase": 0.5 } },
+        { "bone": "foot_L",  "channel": "rotation", "axis": "x",
+          "keys": [[0, -3], [0.25, -20], [0.5, -40], [0.75, 10], [0.88, 8], [1, -3]], "mirror": { "phase": 0.5 } },
+
+        { "bone": "antenna", "channel": "rotation", "axis": "x", "wave": { "amp": 10, "freq": 2, "phase": 0.1, "offset": -6 } },
+        { "bone": "antenna", "channel": "rotation", "axis": "z", "wave": { "amp": 8, "freq": 1, "phase": 0.9 } },
+
+        { "bone": "upperArm_L", "channel": "rotation", "axis": "z", "value": -32, "mirror": true },
+        { "bone": "upperArm_L", "channel": "rotation", "axis": "x", "wave": { "amp": 22, "freq": 1, "phase": 0.5 }, "mirror": { "phase": 0.5 } },
+        { "bone": "foreArm_L",  "channel": "rotation", "axis": "z", "value": 54, "mirror": true },
+        { "bone": "foreArm_L",  "channel": "rotation", "axis": "x", "wave": { "amp": 10, "freq": 1, "phase": 0.5, "offset": -15 }, "mirror": { "phase": 0.5 } }
+      ]
+    },
+
+    "blink": {
+      "duration": 4.3, "loop": true, "layer": "overlay",
+      "tracks": [
+        { "bone": "eye_L", "channel": "scale", "axis": "y", "interp": "linear",
+          "keys": [[0, 1], [0.9, 1], [0.925, 0.08], [0.95, 1], [1, 1]], "mirror": true }
+      ]
+    }
+  },
+
+  "controller": {
+    "states": { "idle": "idle", "walk": "walk" },
+    "overlays": ["blink"],
+    "walkSpeed": 0.8,
+    "turnSpeed": 8,
+    "crossfade": 0.25
+  },
+
+  "view": { "target": [0, 0.85, 0], "distance": 3.2 }
+}

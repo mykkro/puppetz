@@ -1,0 +1,15 @@
+{
+  "name": "puppetz",
+  "version": "1.0.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "description": "Puppetz: data-driven jointed puppet characters (JSON rig -> three.js / GLB) with idle & walk animations",
+  "scripts": {
+    "start": "node tools/serve.mjs",
+    "build:glb": "node tools/build-glb.mjs"
+  },
+  "dependencies": {
+    "three": "0.170.0"
+  }
+}
