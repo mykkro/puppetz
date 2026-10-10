@@ -8,7 +8,7 @@
 // - Slots are layers, built inner to outer: clothes sit on the skin, armor on the clothes, a cape on
 //   everything. An item that wraps a body region grows ctx.layer[region] so the next layer goes
 //   around it; ctx.skirtR is the widest skirt so far. Headwear can set ctx.hides ("hairTop").
-// - Main-hand items set ctx.grip ("blade" or "pole"), off-hand shields set ctx.shield: the body clips
+// - Main-hand items set ctx.grip ("blade", "pole" or "bow"), off-hand shields set ctx.shield: the body clips
 //   (idle, walk, combat, attack...) adapt the arm poses to what the hands hold.
 // - opt holds the resolved colors. "natural" as a default color means the body's hair color.
 // - Material names are per item ("clothes", "armor_metal", "cape"...), so a texture can later be
@@ -87,7 +87,7 @@ function capeShape(ctx, o, { to, flare = 1, wrap = 1, collar = false }) {
   const clasp = ctx.mat('cape_clasp', { texture: 'metal', textureScale: 1, color: o.accent, metalness: 0.9, roughness: 0.3 });
   const k = ctx.layer.torso;
   const topR = d.shoulderX * k + d.armR * ctx.layer.arm * 0.9;
-  const len = { waist: d.chestLen + d.spineLen * 0.6, calves: d.top + d.thigh + d.shin * 0.5, ankles: d.top + d.thigh + d.shin * 0.92 }[to];
+  const len = { shoulders: d.chestLen * 0.75, waist: d.chestLen + d.spineLen * 0.6, calves: d.top + d.thigh + d.shin * 0.5, ankles: d.top + d.thigh + d.shin * 0.92 }[to];
   ctx.bone({ name: 'cape', parent: 'chest', position: [0, r3(d.chestLen - 0.02 * d.H), 0], tags: ['cloth'] });
   // Wide enough to hang over whatever is worn below (hips, tunic skirts, tassets, robes) if it reaches that far.
   const reachesHips = len > d.top * 0.9;
@@ -100,11 +100,22 @@ function capeShape(ctx, o, { to, flare = 1, wrap = 1, collar = false }) {
     ctx.part({ name: 'capeCollar', bone: 'cape', material: cloth, scale: [1, 1, 0.9], geometry: { type: 'lathe', segments: 28, phiStart: 90, phiLength: 180,
       points: [[r, 0], [r * 1.08, 0.06 * d.H], [r * 1.2, 0.11 * d.H]].map(v3) } });
   }
+  if (o.clasp === false) return finishCape();
   ctx.part({ name: 'capeClasp_L', bone: 'cape', material: clasp, mirror: true, position: v3([d.shoulderX * 0.55, -0.01 * d.H, d.chestR * k * d.depth * 0.75]),
     geometry: { type: 'sphere', radius: r3(0.022 * d.G), widthSegments: 12, heightSegments: 8 } });
-  // How far the cape sits behind the chest, so a backpack goes over it.
-  ctx.capeBack = Math.max(topR * 0.82, Math.max(topR, lowR * 0.85) * 0.5) * 0.85 + 0.01;
+  return finishCape();
+  function finishCape() {
+    // How far the cape sits behind the chest, so a backpack goes over it.
+    ctx.capeBack = Math.max(topR * 0.82, Math.max(topR, lowR * 0.85) * 0.5) * 0.85 + 0.01;
+    return { len, lowR, topR, arc };
+  }
 }
+
+/** A fluffy fur ring, e.g. a cape collar or a boot cuff. */
+const furRing = (ctx, name, bone, material, position, radius, tube, extra = {}) => ctx.part({
+  name, bone, material, position: v3(position), rotation: [90, 0, 0], scale: [1, 1, 1.35], ...extra,
+  geometry: { type: 'torus', radius: r3(radius), tube: r3(tube), radialSegments: 10, tubularSegments: 40 },
+});
 
 const sleeve = (ctx, prefix, material, upperK, foreK, foreLen = 1) => {
   const { d } = ctx;
@@ -387,6 +398,42 @@ export const ITEMS = {
     },
   },
 
+  vest: {
+    slot: 'clothes', label: 'Vest & trousers', colors: { color: '#8a3a2a', accent: '#4a4a3a' },
+    build(ctx, o) {
+      const { d } = ctx;
+      const cloth = ctx.mat('clothes', { texture: 'fabric', textureScale: 3, color: o.color, roughness: 0.8 });
+      const trousers = ctx.mat('clothes_trousers', { texture: 'fabric', textureScale: 3, color: o.accent, roughness: 0.85 });
+      ctx.torsoShell('vest', cloth, 1.05, d.spineLen * 0.3, d.top - 0.03 * d.H); // sleeveless: arms and collarbones stay bare
+      ctx.torsoShell('trouserSeat', trousers, 1.05, -Infinity, d.spineLen * 0.35);
+      legs(ctx, 'trouser', trousers, 1.1);
+      ctx.layer.torso = 1.05;
+      belt(ctx, 'belt', ctx.mat('leather', { texture: 'leather', textureScale: 2, color: '#5a3a22', roughness: 0.7 }), ctx.mat('gold', { texture: 'metal', textureScale: 1, color: '#d9a93a', metalness: 0.9, roughness: 0.3 }), 1.06);
+    },
+  },
+  coat: {
+    slot: 'clothes', label: 'Long coat', colors: { color: '#5a2f3a', accent: '#d9a93a' },
+    build(ctx, o) {
+      const { d } = ctx;
+      const cloth = ctx.mat('clothes', { texture: 'fabric', textureScale: 3, color: o.color, roughness: 0.8 });
+      const skirtMat = ctx.mat('clothes_skirt', { texture: 'fabric', textureScale: 3, color: o.color, roughness: 0.8, doubleSided: true });
+      const brass = ctx.mat('clothes_trim', { texture: 'metal', textureScale: 1, color: o.accent, metalness: 0.85, roughness: 0.35 });
+      const trousers = ctx.mat('clothes_trousers', { texture: 'fabric', textureScale: 3, color: '#3a3430', roughness: 0.85 });
+      ctx.torsoShell('coat', cloth, 1.06);
+      skirt(ctx, 'coatTails', skirtMat, -0.06 * d.H - d.thigh * 0.9, d.hipR * 1.45, 1.06);
+      sleeve(ctx, 'coatSleeve', cloth, 1.14, 1.14);
+      legs(ctx, 'trouser', trousers, 1.1);
+      for (let i = 0; i < 4; i++) {
+        const y = lerp(d.spineLen * 0.1, d.top * 0.72, i / 3);
+        ctx.part({ name: `coatButton${i}`, bone: 'spine', material: brass, position: v3([0, y, (ctx.torsoRadius(y) * 1.06 + 0.004) * d.depth + 0.004]),
+          geometry: { type: 'sphere', radius: r3(0.012 * d.G), widthSegments: 10, heightSegments: 8 } });
+      }
+      ctx.part({ name: 'coatCollar', bone: 'neck', material: cloth, position: [0, r3(-0.01 * d.H), 0], rotation: [90, 0, 0],
+        geometry: { type: 'torus', radius: r3(d.R * 0.5), tube: r3(d.R * 0.12), radialSegments: 10, tubularSegments: 32 } });
+      ctx.layer.torso = 1.06;
+    },
+  },
+
   // ------------------------------------------------ armor (over clothes)
   leather: {
     slot: 'armor', label: 'Leather vest', colors: { color: '#8a5a32' },
@@ -428,6 +475,45 @@ export const ITEMS = {
     },
   },
 
+  chainmail: {
+    slot: 'armor', label: 'Chain mail', colors: { color: '#9aa0a8' },
+    build(ctx, o) {
+      const { d } = ctx;
+      const mail = ctx.mat('armor_chain', { texture: 'chain', textureScale: 6, color: o.color, metalness: 0.75, roughness: 0.45 });
+      const mailSkirt = ctx.mat('armor_chain_skirt', { texture: 'chain', textureScale: 6, color: o.color, metalness: 0.75, roughness: 0.45, doubleSided: true });
+      const k = ctx.layer.torso * 1.06;
+      ctx.torsoShell('mailShirt', mail, k, -0.03 * d.H);
+      skirt(ctx, 'mailSkirt', mailSkirt, -0.06 * d.H - d.thigh * 0.45, Math.max(d.hipR * 1.32 * k / 1.05, (ctx.skirtR ?? 0) * 1.04), k);
+      sleeve(ctx, 'mailSleeve', mail, ctx.layer.arm * 1.08, 0);
+      ctx.layer.torso = k;
+    },
+  },
+  breastplate: {
+    slot: 'armor', label: 'Breastplate', colors: { color: '#c9a86a', accent: '#5a3a22' },
+    build(ctx, o) {
+      const { d } = ctx;
+      const metal = ctx.mat('armor_metal', { texture: 'metal', textureScale: 1, color: o.color, metalness: 0.85, roughness: 0.3 });
+      const strap = ctx.mat('armor_strap', { texture: 'leather', textureScale: 2, color: o.accent, roughness: 0.7 });
+      const k = ctx.layer.torso * 1.09;
+      ctx.torsoShell('cuirass', metal, k, d.spineLen * 0.25, d.top - 0.02 * d.H);
+      belt(ctx, 'cuirassBelt', strap, null, k + 0.01);
+      ctx.layer.torso = k;
+    },
+  },
+  gambeson: {
+    slot: 'armor', label: 'Padded gambeson', colors: { color: '#c8b48a' },
+    build(ctx, o) {
+      const { d } = ctx;
+      const pad = ctx.mat('armor_padded', { texture: 'quilt', textureScale: 3, color: o.color, roughness: 0.9 });
+      const padSkirt = ctx.mat('armor_padded_skirt', { texture: 'quilt', textureScale: 3, color: o.color, roughness: 0.9, doubleSided: true });
+      const k = ctx.layer.torso * 1.09;
+      ctx.torsoShell('gambeson', pad, k);
+      skirt(ctx, 'gambesonSkirt', padSkirt, -0.06 * d.H - d.thigh * 0.35, Math.max(d.hipR * 1.3 * k / 1.05, (ctx.skirtR ?? 0) * 1.04), k);
+      sleeve(ctx, 'gambesonSleeve', pad, ctx.layer.arm * 1.12, ctx.layer.foreArm * 1.12);
+      ctx.layer.torso = k;
+    },
+  },
+
   // ------------------------------------------------ hands
   gloves: {
     slot: 'hands', label: 'Gloves', colors: { color: '#6b4428' },
@@ -459,6 +545,25 @@ export const ITEMS = {
     },
   },
 
+  bracers: {
+    slot: 'hands', label: 'Leather bracers', colors: { color: '#7a4b2a', accent: '#c9ccd2' },
+    build(ctx, o) {
+      const { d } = ctx;
+      const m = ctx.mat('bracers', { texture: 'leather', textureScale: 2, color: o.color, roughness: 0.65 });
+      const strap = ctx.mat('bracers_strap', { texture: 'metal', textureScale: 1, color: o.accent, metalness: 0.85, roughness: 0.35 });
+      const r = d.armR * 0.9 * ctx.layer.foreArm * 1.25;
+      for (const side of ['_L', '_R']) {
+        ctx.part({ name: `bracer${side}`, bone: `foreArm${side}`, material: m, position: [0, r3(-d.foreArm * 0.68), 0],
+          geometry: { type: 'cylinder', radiusTop: r3(r), radiusBottom: r3(r * 1.12), height: r3(d.foreArm * 0.5) } });
+        for (const [i, y] of [[0, 0.55], [1, 0.82]]) {
+          ctx.part({ name: `bracerStrap${i}${side}`, bone: `foreArm${side}`, material: strap, position: [0, r3(-d.foreArm * y), 0], rotation: [90, 0, 0],
+            geometry: { type: 'torus', radius: r3(r * (1.02 + 0.1 * (y - 0.55) / 0.27)), tube: r3(0.006 * d.G), radialSegments: 6, tubularSegments: 24 } });
+        }
+      }
+      ctx.layer.foreArm *= 1.25;
+    },
+  },
+
   // ------------------------------------------------ feet
   shoes: {
     slot: 'feet', label: 'Shoes', colors: { color: '#4a3020' },
@@ -471,6 +576,46 @@ export const ITEMS = {
   greaves: {
     slot: 'feet', label: 'Armored boots', colors: { color: '#c3c8d0' },
     build(ctx, o) { bootsShape(ctx, 'greave', ctx.mat('greaves', { texture: 'metal', textureScale: 1, color: o.color, metalness: 0.85, roughness: 0.3 }), 1.16, 0.8); ctx.layer.shin *= 1.25; },
+  },
+
+  sandals: {
+    slot: 'feet', label: 'Sandals', colors: { color: '#8a5a32' },
+    build(ctx, o) {
+      const { d } = ctx;
+      const m = ctx.mat('sandals', { texture: 'leather', textureScale: 2, color: o.color, roughness: 0.7 });
+      ctx.part({ name: 'sandalSole_L', bone: 'foot_L', material: m, mirror: true, position: [0, r3(-d.ankle * 0.96), r3(d.footLen * 0.3)],
+        scale: v3([d.legR * 1.1, d.ankle * 0.12, d.footLen * 0.68]), geometry: { type: 'sphere', radius: 1 } });
+      ctx.part({ name: 'sandalToeStrap_L', bone: 'foot_L', material: m, mirror: true, position: [0, r3(-d.ankle * 0.5), r3(d.footLen * 0.5)],
+        scale: [1, r3((d.ankle * 0.5) / (d.legR * 0.95)), 1],
+        geometry: { type: 'torus', radius: r3(d.legR * 0.95), tube: r3(0.008 * d.G), radialSegments: 6, tubularSegments: 28 } });
+      ctx.part({ name: 'sandalAnkleStrap_L', bone: 'foot_L', material: m, mirror: true, position: [0, r3(d.ankle * 0.1), 0], rotation: [90, 0, 0],
+        geometry: { type: 'torus', radius: r3(d.legR * 0.88), tube: r3(0.008 * d.G), radialSegments: 6, tubularSegments: 28 } });
+    },
+  },
+  tallBoots: {
+    slot: 'feet', label: 'Tall boots', colors: { color: '#2e2622' },
+    build(ctx, o) {
+      const { d } = ctx;
+      const m = ctx.mat('boots', { texture: 'leather', textureScale: 2, color: o.color, roughness: 0.55 });
+      const rTop = d.legR * 0.85 * ctx.layer.shin * 1.2;
+      bootsShape(ctx, 'boot', m, 1.14, 0.95);
+      ctx.part({ name: 'bootFold_L', bone: 'shin_L', material: m, mirror: true, position: [0, r3(-0.02 * d.H), 0],
+        geometry: { type: 'cylinder', radiusTop: r3(rTop * 1.25), radiusBottom: r3(rTop * 1.08), height: r3(0.07 * d.H), openEnded: true } });
+      ctx.layer.shin *= 1.25;
+    },
+  },
+  furBoots: {
+    slot: 'feet', label: 'Fur boots', colors: { color: '#6b4a32', accent: '#d8cfc0' },
+    build(ctx, o) {
+      const { d } = ctx;
+      const m = ctx.mat('boots', { texture: 'leather', textureScale: 2, color: o.color, roughness: 0.7 });
+      const fur = ctx.mat('boots_fur', { texture: 'fur', textureScale: 3, color: o.accent, roughness: 0.95 });
+      const h = d.shin * 0.5;
+      const r = d.legR * 0.85 * ctx.layer.shin * 1.2;
+      bootsShape(ctx, 'boot', m, 1.18, 0.5);
+      furRing(ctx, 'bootFur_L', 'shin_L', fur, [0, -d.shin + h, 0], r * 1.05, 0.03 * d.G, { mirror: true });
+      ctx.layer.shin *= 1.3;
+    },
   },
 
   // ------------------------------------------------ head
@@ -542,6 +687,92 @@ export const ITEMS = {
     },
   },
 
+  hornedHelmet: {
+    slot: 'head', label: 'Horned helmet', colors: { color: '#a0a6ae', accent: '#efe6d0' },
+    build(ctx, o) {
+      const R = ctx.d.R;
+      const metal = ctx.mat('helmet', { texture: 'metal', textureScale: 1, color: o.color, metalness: 0.85, roughness: 0.32, doubleSided: true });
+      const horn = ctx.mat('helmet_horn', { texture: 'noise', textureScale: 2, color: o.accent, roughness: 0.5 });
+      ctx.headShell('helmetDome', metal, R * 1.14, 0, 360, 0, 78);
+      ctx.part({ name: 'helmetRim', bone: 'skull', material: metal, position: ctx.hp([0, R * 1.14 * Math.cos(78 * DEG), 0]), rotation: [90, 0, 0], scale: [1, r3(ctx.d.HZ), 1],
+        geometry: { type: 'torus', radius: r3(R * 1.14 * Math.sin(78 * DEG)), tube: r3(0.05 * R), radialSegments: 8, tubularSegments: 40 } });
+      for (const [side, sx] of [['_L', 1], ['_R', -1]]) {
+        ctx.part({ name: `helmetHorn${side}`, bone: 'skull', material: horn, geometry: { type: 'horn', radiusStart: r3(0.2 * R), radiusEnd: 0, taper: 1,
+          points: ctx.hpts([[sx * 0.95 * R, 0.5 * R, 0], [sx * 1.4 * R, 0.68 * R, 0.08 * R], [sx * 1.65 * R, 1.1 * R, 0.12 * R], [sx * 1.55 * R, 1.55 * R, 0.05 * R]]) } });
+      }
+      ctx.hides.add('hairTop');
+    },
+  },
+  featherHat: {
+    slot: 'head', label: 'Feathered hat', colors: { color: '#2f5a3a', accent: '#d94a3a' },
+    build(ctx, o) {
+      const R = ctx.d.R;
+      const felt = ctx.mat('hat', { texture: 'fabric', textureScale: 3, color: o.color, roughness: 0.85 });
+      const feather = ctx.mat('hat_feather', { texture: 'hair', textureScale: 2, color: o.accent, roughness: 0.7, doubleSided: true });
+      const base = 0.5 * R * ctx.d.HY;
+      const tilt = [-6, 0, 8];
+      ctx.part({ name: 'hatBrim', bone: 'skull', material: felt, position: [0, r3(base), r3(-0.02 * R)], rotation: tilt, scale: [1, 1, r3(ctx.d.HZ)],
+        geometry: { type: 'cylinder', radius: r3(1.55 * R), height: r3(0.05 * R), radialSegments: 40 } });
+      // The crown must rise above the top of the head and any hair under it (about 1.3 R).
+      ctx.part({ name: 'hatCrown', bone: 'skull', material: felt, position: [0, r3(base + 0.42 * R), r3(-0.04 * R)], rotation: tilt, scale: [1, 1, r3(ctx.d.HZ)],
+        geometry: { type: 'cylinder', radiusTop: r3(0.74 * R), radiusBottom: r3(0.98 * R), height: r3(0.8 * R), radialSegments: 32 } });
+      ctx.part({ name: 'hatFeather', bone: 'skull', material: feather, position: [r3(0.95 * R), r3(base + 0.35 * R), r3(-0.25 * R)], rotation: [-50, 0, -28],
+        geometry: { type: 'extrude', smooth: true, depth: 0.004, bevel: 0.002,
+          points: [[0, 0], [0.12 * R, 0.4 * R], [0.08 * R, 1.0 * R], [0, 1.35 * R], [-0.06 * R, 0.9 * R], [-0.08 * R, 0.4 * R]].map(v3) } });
+      ctx.hides.add('hairTop');
+    },
+  },
+  bandana: {
+    slot: 'head', label: 'Bandana', colors: { color: '#c0392b' },
+    build(ctx, o) {
+      const R = ctx.d.R;
+      const cloth = ctx.mat('bandana', { texture: 'fabric', textureScale: 3, color: o.color, roughness: 0.85, doubleSided: true });
+      ctx.headShell('bandanaCap', cloth, R * 1.11, 0, 360, 0, 62);
+      ctx.headShell('bandanaBack', cloth, R * 1.11, 90, 270, 0, 95);
+      ctx.part({ name: 'bandanaKnot', bone: 'skull', material: cloth, position: ctx.hp([0, 0.15 * R, -1.12 * R]),
+        geometry: { type: 'sphere', radius: r3(0.14 * R), widthSegments: 14, heightSegments: 10 } });
+      for (const [side, sx] of [['_L', 1], ['_R', -1]]) {
+        ctx.part({ name: `bandanaTail${side}`, bone: 'skull', material: cloth, geometry: { type: 'horn', radiusStart: r3(0.09 * R), radiusEnd: r3(0.02 * R), taper: 0.8,
+          points: ctx.hpts([[0, 0.12 * R, -1.15 * R], [sx * 0.15 * R, -0.3 * R, -1.28 * R], [sx * 0.28 * R, -0.75 * R, -1.22 * R]]) } });
+      }
+      ctx.hides.add('hairTop');
+    },
+  },
+  strawHat: {
+    slot: 'head', label: 'Straw hat', colors: { color: '#e2c27a', accent: '#a8323a' },
+    build(ctx, o) {
+      const R = ctx.d.R;
+      const straw = ctx.mat('hat_straw', { texture: 'fabric', textureScale: 6, textureStrength: 0.25, color: o.color, roughness: 0.9, doubleSided: true });
+      const band = ctx.mat('hat_band', { texture: 'fabric', textureScale: 3, color: o.accent, roughness: 0.6 });
+      const base = 0.55 * R * ctx.d.HY;
+      const sz = [1, 1, r3(ctx.d.HZ)];
+      ctx.part({ name: 'hatBrim', bone: 'skull', material: straw, position: [0, r3(base), 0], scale: sz,
+        geometry: { type: 'lathe', segments: 40, points: [[2.0 * R, -0.14 * R], [1.6 * R, -0.03 * R], [0.95 * R, 0.02 * R]].map(v3) } });
+      ctx.part({ name: 'hatCrown', bone: 'skull', material: straw, position: [0, r3(base), 0], scale: sz,
+        geometry: { type: 'lathe', segments: 40, points: [[0.95 * R, 0], [0.93 * R, 0.45 * R], [0.72 * R, 0.68 * R], [0, 0.72 * R]].map(v3) } });
+      ctx.part({ name: 'hatBand', bone: 'skull', material: band, position: [0, r3(base + 0.08 * R), 0], rotation: [90, 0, 0], scale: [1, r3(ctx.d.HZ), 1],
+        geometry: { type: 'torus', radius: r3(0.95 * R), tube: r3(0.05 * R), radialSegments: 8, tubularSegments: 40 } });
+      ctx.hides.add('hairTop');
+    },
+  },
+  circlet: {
+    slot: 'head', label: 'Circlet', colors: { color: '#d9a93a', accent: '#3fb0d9' },
+    build(ctx, o) {
+      const R = ctx.d.R;
+      const gold = ctx.mat('circlet', { texture: 'metal', textureScale: 1, color: o.color, metalness: 0.9, roughness: 0.28 });
+      const gem = ctx.mat('circlet_gem', { color: o.accent, emissive: o.accent, emissiveIntensity: 0.3, roughness: 0.1, clearcoat: 1 });
+      // A ring around the head over the hair, sitting higher at the back (plane tilted 12° back).
+      const r = 1.13 * R * Math.sin(66 * DEG);
+      const h = 1.13 * R * Math.cos(66 * DEG);
+      const c = [0, h * Math.cos(12 * DEG), -h * Math.sin(12 * DEG)];
+      ctx.part({ name: 'circletBand', bone: 'skull', material: gold, position: ctx.hp(c), rotation: [78, 0, 0], scale: [1, r3(ctx.d.HZ), 1],
+        geometry: { type: 'torus', radius: r3(r), tube: r3(0.035 * R), radialSegments: 8, tubularSegments: 48 } });
+      const front = [0, c[1] + r * Math.sin(12 * DEG), c[2] + r * Math.cos(12 * DEG)];
+      ctx.part({ name: 'circletGem', bone: 'skull', material: gem, position: ctx.hp([front[0], front[1], front[2] + 0.03 * R]), scale: [1, 1.3, 0.7],
+        geometry: { type: 'sphere', radius: r3(0.08 * R), widthSegments: 12, heightSegments: 10 } });
+    },
+  },
+
   // ------------------------------------------------ cape (over clothes and armor)
   cape: {
     slot: 'cape', label: 'Cape', colors: { color: '#a8323a', accent: '#e2b53e' },
@@ -554,6 +785,28 @@ export const ITEMS = {
   cloak: {
     slot: 'cape', label: 'Cloak', colors: { color: '#4a4038', accent: '#a8642a' },
     build(ctx, o) { capeShape(ctx, o, { to: 'ankles', flare: 1.25, wrap: 1.25, collar: true }); },
+  },
+
+  mantle: {
+    slot: 'cape', label: 'Fur mantle', colors: { color: '#5a3a5a', accent: '#d8cfc0' },
+    build(ctx, o) {
+      const { d } = ctx;
+      const { topR } = capeShape(ctx, { ...o, clasp: false }, { to: 'shoulders', flare: 1.1 });
+      const fur = ctx.mat('cape_fur', { texture: 'fur', textureScale: 3, color: o.accent, roughness: 0.95 });
+      furRing(ctx, 'mantleFur', 'cape', fur, [0, 0.0, 0], topR * 0.62, 0.045 * d.G, { scale: [1, 0.85, 1.35] });
+    },
+  },
+  royalCape: {
+    slot: 'cape', label: 'Royal cape', colors: { color: '#6a1f8a', accent: '#f2eee6' },
+    build(ctx, o) {
+      const { d } = ctx;
+      const { len, lowR, topR, arc } = capeShape(ctx, { ...o, accent: '#e2b53e' }, { to: 'ankles', flare: 1.15, wrap: 1.1 });
+      const fur = ctx.mat('cape_fur', { texture: 'fur', textureScale: 3, color: o.accent, roughness: 0.95, doubleSided: true });
+      const band = 0.07 * d.H;
+      ctx.part({ name: 'capeErmine', bone: 'cape', material: fur, scale: [1, 1, 0.85], geometry: { type: 'lathe', segments: 32, phiStart: r3(180 - arc / 2), phiLength: r3(arc),
+        points: [[lowR * 1.08 + 0.01, -len - 0.004], [lowR * 1.075 + 0.01, -len + band]].map(v3) } });
+      furRing(ctx, 'capeCollarFur', 'cape', fur, [0, 0.01 * d.H, 0], topR * 0.62, 0.04 * d.G, { scale: [1, 0.85, 1.35] });
+    },
   },
 
   // ------------------------------------------------ back (over everything, the cape included)
@@ -571,6 +824,29 @@ export const ITEMS = {
       ctx.part({ name: 'packRoll', bone: 'chest', material: ctx.mat('backpack_roll', { texture: 'knit', textureScale: 3, color: '#a3b06a', roughness: 0.9 }),
         position: v3([0, d.chestLen * 0.3 + 0.17 * d.H, -back - 0.07 * d.G]), rotation: [0, 0, 90],
         geometry: { type: 'capsule', radius: r3(0.045 * d.G), length: r3(0.2 * d.G) } });
+    },
+  },
+
+  quiver: {
+    slot: 'back', label: 'Quiver', colors: { color: '#7a4b2a', accent: '#e6e0d0' },
+    build(ctx, o) {
+      const { d } = ctx;
+      const s = lerp(0.7, 1, d.grow);
+      const leather = ctx.mat('quiver', { texture: 'leather', textureScale: 2, color: o.color, roughness: 0.7 });
+      const shaft = ctx.mat('arrow_shaft', { texture: 'wood', textureScale: 1, color: '#c8a46a', roughness: 0.7 });
+      const fletch = ctx.mat('arrow_fletching', { color: o.accent, roughness: 0.8, doubleSided: true });
+      const back = Math.max(ctx.torsoRadius(d.spineLen + d.chestLen * 0.45) * ctx.layer.torso * d.depth, ctx.capeBack ?? 0);
+      const L = 0.36 * s;
+      ctx.bone({ name: 'quiver', parent: 'chest', position: v3([0, d.chestLen * 0.35, -back - 0.05 * d.G]), rotation: [0, 0, -25], tags: ['prop'] });
+      ctx.part({ name: 'quiverTube', bone: 'quiver', material: leather,
+        geometry: { type: 'cylinder', radiusTop: r3(0.045 * s), radiusBottom: r3(0.036 * s), height: r3(L), openEnded: false } });
+      [[0.015, 0.012], [-0.016, 0.01], [0.002, -0.017], [-0.004, 0.0]].forEach(([x, z], i) => {
+        const top = L / 2 + 0.07 * s + i * 0.008;
+        ctx.part({ name: `arrowShaft${i}`, bone: 'quiver', material: shaft, position: v3([x * s, top - 0.09 * s, z * s]),
+          geometry: { type: 'cylinder', radius: r3(0.004 * s), height: r3(0.18 * s), radialSegments: 6 } });
+        ctx.part({ name: `arrowFletch${i}`, bone: 'quiver', material: fletch, position: v3([x * s, top - 0.02 * s, z * s]), rotation: [0, r3(i * 45), 0],
+          geometry: { type: 'box', size: v3([0.03 * s, 0.05 * s, 0.003]) } });
+      });
     },
   },
 
@@ -644,6 +920,108 @@ export const ITEMS = {
     },
   },
 
+  dagger: {
+    slot: 'mainHand', label: 'Dagger', colors: { color: '#d7dbe2', accent: '#3e2716' },
+    build(ctx, o) {
+      const s = lerp(0.8, 1, ctx.d.grow);
+      const steel = ctx.mat('dagger_blade', { texture: 'metal', textureScale: 1, color: o.color, metalness: 0.9, roughness: 0.22 });
+      const hilt = ctx.mat('dagger_hilt', { texture: 'leather', textureScale: 2, color: o.accent, roughness: 0.6 });
+      const w = 0.022 * s;
+      ctx.part({ name: 'daggerGrip', bone: 'grip_R', material: hilt, rotation: [90, 0, 0], geometry: { type: 'cylinder', radius: r3(0.014 * s), height: r3(0.09 * s) } });
+      ctx.part({ name: 'daggerGuard', bone: 'grip_R', material: steel, position: [0, 0, r3(0.05 * s)], geometry: { type: 'box', size: v3([0.025 * s, 0.09 * s, 0.015 * s]), radius: 0.005 } });
+      ctx.part({ name: 'daggerBlade', bone: 'grip_R', material: steel, position: [0, 0, r3(0.056 * s)], rotation: [90, 90, 0],
+        geometry: { type: 'extrude', depth: 0.005, bevel: 0.003, points: [[-w, 0], [w, 0], [w * 0.7, 0.16 * s], [0, 0.22 * s], [-w * 0.7, 0.16 * s]].map(v3) } });
+      ctx.grip = 'blade';
+    },
+  },
+  mace: {
+    slot: 'mainHand', label: 'Mace', colors: { color: '#a8adb5', accent: '#5a3a22' },
+    build(ctx, o) {
+      const s = lerp(0.75, 1, ctx.d.grow);
+      const steel = ctx.mat('mace_head', { texture: 'metal', textureScale: 1, color: o.color, metalness: 0.85, roughness: 0.32 });
+      const wood = ctx.mat('mace_haft', { texture: 'wood', textureScale: 1, color: o.accent, roughness: 0.7 });
+      ctx.part({ name: 'maceHaft', bone: 'grip_R', material: wood, position: [0, 0, r3(0.13 * s)], rotation: [90, 0, 0],
+        geometry: { type: 'cylinder', radius: r3(0.016 * s), height: r3(0.42 * s) } });
+      ctx.part({ name: 'maceBall', bone: 'grip_R', material: steel, position: [0, 0, r3(0.37 * s)], geometry: { type: 'sphere', radius: r3(0.055 * s) } });
+      for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * 360;
+        const ring = i % 2 ? 1 : -1;
+        ctx.part({ name: `maceSpike${i}`, bone: 'grip_R', material: steel, rotation: [r3(ring * 30), 0, r3(a)], rotationOrder: 'ZXY',
+          position: v3([-Math.sin(a * DEG) * 0.055 * s, Math.cos(a * DEG) * 0.055 * s, 0.37 * s + ring * 0.025 * s]),
+          geometry: { type: 'cone', radius: r3(0.015 * s), height: r3(0.04 * s), radialSegments: 8 } });
+      }
+      ctx.grip = 'blade';
+    },
+  },
+  warhammer: {
+    slot: 'mainHand', label: 'War hammer', colors: { color: '#b8bdc5', accent: '#6b4428' },
+    build(ctx, o) {
+      const s = lerp(0.75, 1, ctx.d.grow);
+      const steel = ctx.mat('hammer_head', { texture: 'metal', textureScale: 1, color: o.color, metalness: 0.85, roughness: 0.3 });
+      const wood = ctx.mat('hammer_haft', { texture: 'wood', textureScale: 1, color: o.accent, roughness: 0.7 });
+      ctx.part({ name: 'hammerHaft', bone: 'grip_R', material: wood, position: [0, 0, r3(0.2 * s)], rotation: [90, 0, 0],
+        geometry: { type: 'cylinder', radius: r3(0.017 * s), height: r3(0.6 * s) } });
+      ctx.part({ name: 'hammerHead', bone: 'grip_R', material: steel, position: [0, r3(-0.025 * s), r3(0.47 * s)],
+        geometry: { type: 'box', size: v3([0.06 * s, 0.13 * s, 0.07 * s]), radius: 0.008 } });
+      ctx.part({ name: 'hammerSpike', bone: 'grip_R', material: steel, position: [0, r3(0.07 * s), r3(0.47 * s)],
+        geometry: { type: 'cone', radius: r3(0.025 * s), height: r3(0.08 * s), radialSegments: 10 } });
+      ctx.grip = 'blade';
+    },
+  },
+  torch: {
+    slot: 'mainHand', label: 'Torch', colors: { color: '#7a5634', accent: '#ff9a2a' },
+    build(ctx, o) {
+      const s = lerp(0.75, 1, ctx.d.grow);
+      const wood = ctx.mat('torch_wood', { texture: 'wood', textureScale: 1, color: o.color, roughness: 0.8 });
+      const wrap = ctx.mat('torch_wrap', { texture: 'fabric', textureScale: 2, color: '#3a2e26', roughness: 0.95 });
+      const flame = ctx.mat('torch_flame', { color: o.accent, emissive: o.accent, emissiveIntensity: 1.6, roughness: 1, opacity: 0.9 });
+      const core = ctx.mat('torch_flame_core', { color: '#fff2b0', emissive: '#ffe680', emissiveIntensity: 2, roughness: 1 });
+      ctx.part({ name: 'torchHandle', bone: 'grip_R', material: wood, position: [0, 0, r3(0.1 * s)], rotation: [90, 0, 0],
+        geometry: { type: 'cylinder', radiusTop: r3(0.022 * s), radiusBottom: r3(0.016 * s), height: r3(0.38 * s) } });
+      ctx.part({ name: 'torchWrap', bone: 'grip_R', material: wrap, position: [0, 0, r3(0.29 * s)], rotation: [90, 0, 0],
+        geometry: { type: 'cylinder', radiusTop: r3(0.032 * s), radiusBottom: r3(0.026 * s), height: r3(0.06 * s) } });
+      // The flame stays upright-ish relative to the torch and flickers (overlay clip "flicker").
+      ctx.bone({ name: 'flame', parent: 'grip_R', position: [0, 0, r3(0.32 * s)], rotation: [90, 0, 0], tags: ['prop'] });
+      ctx.part({ name: 'flameOuter', bone: 'flame', material: flame, castShadow: false, position: [0, r3(0.055 * s), 0],
+        geometry: { type: 'cone', radius: r3(0.04 * s), height: r3(0.13 * s), radialSegments: 12 } });
+      ctx.part({ name: 'flameBase', bone: 'flame', material: flame, castShadow: false, geometry: { type: 'sphere', radius: r3(0.04 * s), widthSegments: 12, heightSegments: 8 } });
+      ctx.part({ name: 'flameCore', bone: 'flame', material: core, castShadow: false, position: [0, r3(0.03 * s), 0],
+        geometry: { type: 'cone', radius: r3(0.022 * s), height: r3(0.07 * s), radialSegments: 10 } });
+      ctx.grip = 'pole'; // held upright like a staff, so the flame points up
+    },
+  },
+  wand: {
+    slot: 'mainHand', label: 'Wand', colors: { color: '#4a2f22', accent: '#ff7ad9' },
+    build(ctx, o) {
+      const s = lerp(0.85, 1, ctx.d.grow);
+      const wood = ctx.mat('wand_wood', { texture: 'wood', textureScale: 1, color: o.color, roughness: 0.6 });
+      const star = ctx.mat('wand_star', { color: o.accent, emissive: o.accent, emissiveIntensity: 1, roughness: 0.2 });
+      ctx.part({ name: 'wandStick', bone: 'grip_R', material: wood, position: [0, 0, r3(0.08 * s)], rotation: [90, 0, 0],
+        geometry: { type: 'cylinder', radiusTop: r3(0.006 * s), radiusBottom: r3(0.011 * s), height: r3(0.28 * s) } });
+      ctx.part({ name: 'wandStar', bone: 'grip_R', material: star, castShadow: false, position: [0, 0, r3(0.235 * s)], rotation: [0, 90, 0],
+        geometry: { type: 'extrude', depth: 0.006, bevel: 0.003,
+          points: Array.from({ length: 10 }, (_, i) => { const a = (i / 10) * Math.PI * 2; const rr = (i % 2 ? 0.014 : 0.034) * s; return v3([Math.sin(a) * rr, Math.cos(a) * rr]); }) } });
+      ctx.grip = 'blade';
+    },
+  },
+  bow: {
+    slot: 'mainHand', label: 'Bow', colors: { color: '#8a5a32', accent: '#e6e0d0' },
+    build(ctx, o) {
+      const s = lerp(0.7, 1, ctx.d.grow) * (0.85 + 0.15 * ctx.d.H);
+      const wood = ctx.mat('bow_wood', { texture: 'wood', textureScale: 1, color: o.color, roughness: 0.6 });
+      const string = ctx.mat('bow_string', { color: o.accent, roughness: 0.8 });
+      const L = 0.5 * s;
+      // Limbs along the grip's Z axis, bending toward the archer (+Y); the string joins the tips.
+      ctx.part({ name: 'bowLimbs', bone: 'grip_R', material: wood, geometry: { type: 'tube', radius: r3(0.011 * s), tubularSegments: 40,
+        points: [[0, 0.1 * s, -L], [0, 0.03 * s, -L * 0.6], [0, -0.012 * s, 0], [0, 0.03 * s, L * 0.6], [0, 0.1 * s, L]].map(v3) } });
+      ctx.part({ name: 'bowGrip', bone: 'grip_R', material: ctx.mat('bow_grip', { texture: 'leather', textureScale: 2, color: '#3e2716', roughness: 0.7 }),
+        position: [0, r3(-0.012 * s), 0], rotation: [90, 0, 0], geometry: { type: 'cylinder', radius: r3(0.016 * s), height: r3(0.1 * s) } });
+      ctx.part({ name: 'bowString', bone: 'grip_R', material: string, castShadow: false,
+        geometry: { type: 'tube', radius: 0.0025, tubularSegments: 2, radialSegments: 4, points: [[0, 0.1 * s, -L], [0, 0.1 * s, L]].map(v3) } });
+      ctx.grip = 'bow';
+    },
+  },
+
   // ------------------------------------------------ off hand (left forearm). Faces the mount's +X.
   roundShield: {
     slot: 'offHand', label: 'Round shield', colors: { color: '#2f5fa8', accent: '#d9a93a' },
@@ -677,6 +1055,46 @@ export const ITEMS = {
         geometry: { type: 'box', size: v3([0.006, 0.36 * s, 0.05 * s]) } });
       ctx.part({ name: 'shieldCrossH', bone: 'mount_L', material: paint, position: [r3(out + 0.027), r3(0.08 * s), 0],
         geometry: { type: 'box', size: v3([0.006, 0.05 * s, 0.2 * s]) } });
+      ctx.shield = true;
+    },
+  },
+  buckler: {
+    slot: 'offHand', label: 'Buckler', colors: { color: '#b8bdc5', accent: '#8a5a32' },
+    build(ctx, o) {
+      const s = lerp(0.75, 1, ctx.d.grow);
+      const metal = ctx.mat('shield', { texture: 'metal', textureScale: 1, color: o.color, metalness: 0.85, roughness: 0.3 });
+      const rim = ctx.mat('shield_trim', { texture: 'leather', textureScale: 2, color: o.accent, roughness: 0.6 });
+      const r = 0.12 * s;
+      const out = ctx.d.armR * (ctx.layer.foreArm - 1);
+      // A shallow dome: its rim sits on the forearm, the dome bulges outward.
+      const dome = r * 1.6;
+      const cos = Math.cos(38 * DEG);
+      ctx.part({ name: 'shieldBoard', bone: 'mount_L', material: metal, position: [r3(out - dome * cos), 0, 0], rotation: [0, 0, -90],
+        geometry: { type: 'sphere', radius: r3(dome), thetaLength: 38, widthSegments: 36, heightSegments: 8 } });
+      ctx.part({ name: 'shieldRim', bone: 'mount_L', material: rim, position: [r3(out), 0, 0], rotation: [0, 90, 0],
+        geometry: { type: 'torus', radius: r3(dome * Math.sin(38 * DEG)), tube: r3(0.012 * s), radialSegments: 8, tubularSegments: 40 } });
+      ctx.part({ name: 'shieldBoss', bone: 'mount_L', material: metal, position: [r3(out + dome * (1 - cos)), 0, 0], rotation: [0, 0, -90],
+        geometry: { type: 'sphere', radius: r3(0.035 * s), thetaLength: 90 } });
+      ctx.shield = true;
+    },
+  },
+  towerShield: {
+    slot: 'offHand', label: 'Tower shield', colors: { color: '#7a2f2f', accent: '#d9a93a' },
+    build(ctx, o) {
+      const s = lerp(0.7, 1, ctx.d.grow);
+      const board = ctx.mat('shield', { texture: 'wood', textureScale: 1, color: o.color, roughness: 0.65 });
+      const trim = ctx.mat('shield_trim', { texture: 'metal', textureScale: 1, color: o.accent, metalness: 0.85, roughness: 0.3 });
+      const out = ctx.d.armR * (ctx.layer.foreArm - 1);
+      const w = 0.17 * s;
+      const top = 0.26 * s;
+      const bottom = -0.42 * s;
+      const pts = [[-w, bottom], [w, bottom], [w, top - 0.04 * s], [w * 0.6, top], [-w * 0.6, top], [-w, top - 0.04 * s]];
+      ctx.part({ name: 'shieldBoard', bone: 'mount_L', material: board, position: [r3(out + 0.012), 0, 0], rotation: [0, 90, 0],
+        geometry: { type: 'extrude', depth: 0.018, bevel: 0.008, points: pts.map(v3) } });
+      ctx.part({ name: 'shieldStripe', bone: 'mount_L', material: trim, position: [r3(out + 0.033), r3((top + bottom) / 2), 0],
+        geometry: { type: 'box', size: v3([0.006, (top - bottom) * 0.92, 0.05 * s]) } });
+      ctx.part({ name: 'shieldBoss', bone: 'mount_L', material: trim, position: [r3(out + 0.033), 0, 0], rotation: [0, 0, -90],
+        geometry: { type: 'sphere', radius: r3(0.045 * s), thetaLength: 90 } });
       ctx.shield = true;
     },
   },

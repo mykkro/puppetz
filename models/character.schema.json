@@ -71,7 +71,7 @@
         "clearcoat": { "type": "number", "minimum": 0, "maximum": 1 },
         "clearcoatRoughness": { "type": "number", "minimum": 0, "maximum": 1 },
         "flatShading": { "type": "boolean" },
-        "texture": { "enum": ["noise", "skin", "fabric", "knit", "leather", "metal", "wood", "hair"], "description": "Procedural grayscale pattern multiplied with the color (and used as a bump map in the web viewer)." },
+        "texture": { "enum": ["noise", "skin", "fabric", "knit", "leather", "metal", "wood", "hair", "chain", "fur", "quilt"], "description": "Procedural grayscale pattern multiplied with the color (and used as a bump map in the web viewer)." },
         "textureScale": { "type": "number", "description": "How many times the texture repeats across the part's UVs." },
         "textureStrength": { "type": "number", "minimum": 0, "maximum": 1, "description": "How strongly the pattern shades the color." },
         "bumpScale": { "type": "number" },

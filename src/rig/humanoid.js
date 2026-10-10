@@ -90,7 +90,7 @@ function makeContext(cfg) {
     cfg, body, d,
     skeleton: [], parts: [], materials: {},
     hides: new Set(), // body features covered by items, e.g. "hairTop" under a helmet
-    grip: null, // "blade" | "pole": how the main-hand item is held (drives poses and swings)
+    grip: null, // "blade" | "pole" | "bow": how the main-hand item is held (drives poses and swings)
     shield: false,
     layer: { torso: 1, arm: 1, foreArm: 1, leg: 1, shin: 1, foot: 1, hand: 1, head: 1 }, // outermost covering per region
   };
@@ -308,7 +308,7 @@ function armRest(ctx) {
   const L = { upper: [0, 0, out], fore: [-10, 0, 0], hand: [0, 0, 0] };
   const R = { upper: [0, 0, -out], fore: [-10, 0, 0], hand: [0, 0, 0] };
   if (ctx.grip === 'blade') Object.assign(R, { upper: [-5, 0, -out - 3], fore: [-35, 0, 0], hand: [55, 0, 0] });
-  if (ctx.grip === 'pole') Object.assign(R, { upper: [-8, 0, -out - 6], fore: [-78, 0, 0], hand: [-8, -22, 0] }); // wrist leans the pole away from the head
+  if (ctx.grip === 'pole' || ctx.grip === 'bow') Object.assign(R, { upper: [-8, 0, -out - 6], fore: [-78, 0, 0], hand: [-8, -22, 0] }); // wrist leans the pole away from the head
   if (ctx.shield) Object.assign(L, { upper: [-5, 0, out + 4], fore: [-30, 0, 0] });
   return { L, R };
 }
@@ -331,7 +331,7 @@ function makeClips(ctx) {
   const tail = (src) => (extraBones.has('ponytail') ? [rot('ponytail', 'x', src)] : []);
   // How much each arm swings while moving: held poles and shields keep their pose.
   const swingL = ctx.shield ? 0.35 : 1;
-  const swingR = ctx.grip === 'pole' ? 0.15 : ctx.grip === 'blade' ? 0.55 : 1;
+  const swingR = ctx.grip === 'pole' || ctx.grip === 'bow' ? 0.15 : ctx.grip === 'blade' ? 0.55 : 1;
   const clips = {};
 
   clips.idle = { duration: 3.2, tracks: [
@@ -422,16 +422,25 @@ function makeClips(ctx) {
     rot('shin_R', 'x', value(30 * st)), rot('foot_R', 'x', value(-32 * st)),
     ...cape(value(-6)),
   ];
+  const bow = ctx.grip === 'bow';
   const guardR = ctx.grip === 'blade' ? armPose('_R', [-30, 0, -out - 30], [-85, 0, 0], [-10, 0, 0])
     : ctx.grip === 'pole' ? armPose('_R', [-10, 0, -out - 10], [-55, 0, 0], [62, 0, 0])
+    : bow ? armPose('_R', [-82, 0, -8], [-4, 0, 0], [0, 0, 0]) // bow arm straight out, the bow upright
     : armPose('_R', [-45, 0, -out - 5], [-115, 25, 0], [0, 0, 0]);
-  const guardL = ctx.shield ? armPose('_L', [-60, 0, out + 5], [-80, 0, 0], [0, 0, 0])
+  const guardL = bow ? armPose('_L', [-78, 0, -32], [-25, 0, 0], [0, 0, 0]) // the other hand on the string
+    : ctx.shield ? armPose('_L', [-60, 0, out + 5], [-80, 0, 0], [0, 0, 0])
     : armPose('_L', [-45, 0, out + 5], [-115, -25, 0], [0, 0, 0]);
   clips.combat = { duration: 1.2, tracks: [...stanceLegs, ...guardR, ...guardL] };
 
-  // Attack: a chop (sword, axe), a thrust (spear, staff) or a jab (empty hand), back to guard.
+  // Attack: a chop (sword, axe, mace...), a thrust (spear, staff), a draw and release (bow) or a
+  // jab (empty hand), back to guard.
   let strike;
-  if (ctx.grip === 'blade') {
+  if (bow) {
+    strike = [...guardR, ...armPose('_L',
+      [[[0, -78], [0.45, -92], [0.7, -92], [0.74, -80], [1, -78]], 0, [[0, -32], [0.45, -12], [0.7, -12], [0.74, -30], [1, -32]]],
+      [[[0, -25], [0.45, -135], [0.7, -135], [0.74, -30], [1, -25]], 0, 0],
+      [0, 0, 0])];
+  } else if (ctx.grip === 'blade') {
     strike = armPose('_R',
       [[[0, -30], [0.3, -165], [0.42, -60], [0.55, -35], [1, -30]], 0, -out - 30],
       [[[0, -85], [0.3, -50], [0.42, -5], [0.55, -15], [1, -85]], 0, 0],
@@ -447,12 +456,14 @@ function makeClips(ctx) {
       [[[0, -115], [0.25, -125], [0.4, -10], [0.55, -15], [1, -115]], [[0, 25], [0.4, 0], [1, 25]], 0],
       [0, 0, 0]);
   }
-  clips.attack = { duration: ctx.grip === 'pole' ? 1.0 : 0.85, tracks: [
-    ...stanceLegs.filter((t) => !(t.bone === 'spine' && t.channel === 'rotation')),
-    rot('spine', 'x', keys([[0, 8], [0.3, 0], [0.45, 22], [0.6, 18], [1, 8]])),
-    rot('spine', 'y', keys([[0, 18], [0.3, 30], [0.45, -5], [0.6, 0], [1, 18]])),
-    ...strike, ...guardL,
-  ] };
+  clips.attack = bow
+    ? { duration: 1.6, tracks: [...stanceLegs, ...strike] }
+    : { duration: ctx.grip === 'pole' ? 1.0 : 0.85, tracks: [
+      ...stanceLegs.filter((t) => !(t.bone === 'spine' && t.channel === 'rotation')),
+      rot('spine', 'x', keys([[0, 8], [0.3, 0], [0.45, 22], [0.6, 18], [1, 8]])),
+      rot('spine', 'y', keys([[0, 18], [0.3, 30], [0.45, -5], [0.6, 0], [1, 18]])),
+      ...strike, ...guardL,
+    ] };
 
   // Face layer. Every expression states every mouth shape so that switching always lands cleanly.
   const MOUTHS = ['mouthNeutral', 'mouthSmile', 'mouthFrown', 'mouthOpen'];
@@ -499,6 +510,15 @@ function makeClips(ctx) {
     rot('skull', 'x', keys([[0, 8], [0.5, 16], [0.6, 4], [1, 8]])),
     rot('skull', 'z', value(7)),
   ], 4);
+
+  // A held flame (torch) flickers forever.
+  if (extraBones.has('flame')) {
+    clips.flicker = { layer: 'overlay', duration: 0.8, tracks: [
+      T('flame', 'scale', 'y', { interp: 'smooth', ...keys([[0, 1], [0.2, 1.25], [0.35, 0.9], [0.55, 1.15], [0.75, 0.85], [1, 1]]) }),
+      T('flame', 'scale', 'x', { interp: 'smooth', ...keys([[0, 1], [0.25, 0.85], [0.5, 1.1], [0.8, 0.9], [1, 1]]) }),
+      rot('flame', 'z', wave(6, 2)),
+    ] };
+  }
 
   clips.blink = { layer: 'overlay', duration: 3.9, tracks: [
     T('blink_L', 'scale', 'y', { interp: 'linear', ...keys([[0, 1], [0.86, 1], [0.89, 0.08], [0.92, 1], [1, 1]]) }, { mirror: true }),
@@ -552,7 +572,7 @@ export function generateHumanoid(cfg) {
     clips,
     controller: {
       states: { idle: 'idle', walk: 'walk', run: 'run', talk: 'talk', combat: 'combat', attack: 'attack' },
-      overlays: ['blink'],
+      overlays: Object.keys(clips).filter((n) => clips[n].layer === 'overlay'),
       expressions,
       defaultExpression: EXPRESSIONS.includes(cfg.expression) ? cfg.expression : 'neutral',
       walkSpeed, runSpeed, turnSpeed: 9, crossfade: 0.22,

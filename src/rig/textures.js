@@ -71,11 +71,30 @@ const PATTERNS = {
     return rings * 0.6 + (noise(u * 0.1, v, 64) - 0.5) * 0.8;
   },
   hair: (u, v) => (noise(u, v * 0.03, 64) - 0.5) * 1.6 + (fbm(u, v, 4, 2) - 0.5) * 0.6,
+  // Interlocking rings: each row offset by half a ring.
+  chain: (u, v) => {
+    const n = 16;
+    const y = v * n;
+    const x = u * n + (Math.floor(y) % 2) * 0.5;
+    const dx = x - Math.floor(x) - 0.5;
+    const dy = y - Math.floor(y) - 0.5;
+    const r = Math.sqrt(dx * dx + dy * dy);
+    return Math.abs(r - 0.32) < 0.11 ? 0.9 : -0.9;
+  },
+  fur: (u, v) => (noise(u, v * 0.25, 64) - 0.5) * 2 + (fbm(u, v, 8, 2) - 0.5) * 0.8,
+  // Quilted padding: diamond seams over soft puffs.
+  quilt: (u, v) => {
+    const n = 8;
+    const a = (u + v) * n;
+    const b = (u - v) * n;
+    const seam = Math.min(Math.abs(a - Math.round(a)), Math.abs(b - Math.round(b)));
+    return seam < 0.06 ? -1 : Math.min(1, seam * 3) * 0.6 + (fbm(u, v, 8, 2) - 0.5) * 0.4;
+  },
 };
 
 export const TEXTURE_TYPES = Object.keys(PATTERNS);
 
-const DEFAULT_STRENGTH = { noise: 0.12, skin: 0.06, fabric: 0.14, knit: 0.16, leather: 0.16, metal: 0.06, wood: 0.18, hair: 0.18 };
+const DEFAULT_STRENGTH = { noise: 0.12, skin: 0.06, fabric: 0.14, knit: 0.16, leather: 0.16, metal: 0.06, wood: 0.18, hair: 0.18, chain: 0.35, fur: 0.25, quilt: 0.2 };
 const DEFAULT_BUMP = { skin: 0.5, metal: 0.4 };
 
 const cache = new Map();

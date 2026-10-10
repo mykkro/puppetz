@@ -28,6 +28,8 @@ run, talk, combat, attack, blink and six expressions:
 | [wizard](wizard/wizard.json) | old man in a robe and pointy hat, long beard, magic staff |
 | [villager](villager/villager.json) | a small girl in a dress |
 | [dwarf](dwarf/dwarf.json) | short and stout: helmet, long beard, axe and kite shield |
+| [archer](archer/archer.json) | long coat, bronze breastplate, feathered hat, bow and quiver |
+| [viking](viking/viking.json) | chain mail, horned helmet, fur boots, war hammer and tower shield |
 
 - Format reference (JSON fields, GLB layout): [docs/character-format.md](../docs/character-format.md)
 - Making a new character: [docs/creating-a-character.md](../docs/creating-a-character.md)

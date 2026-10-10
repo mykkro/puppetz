@@ -34,7 +34,8 @@ models, change the body and the items, press **Save JSON** and put the file in
 
 Sample recipes: [knight](../models/knight/knight.json), [ranger](../models/ranger/ranger.json),
 [wizard](../models/wizard/wizard.json), [village kid](../models/villager/villager.json),
-[stout warrior](../models/dwarf/dwarf.json).
+[stout warrior](../models/dwarf/dwarf.json), [archer](../models/archer/archer.json),
+[viking](../models/viking/viking.json).
 
 ## Body
 
@@ -58,15 +59,15 @@ Everything worn or carried is an **item** from the library in
 |---|---|
 | `hair` | `short`, `spiky`, `bob`, `long`, `ponytail`, `bun`, `afro`, `mohawk`, `braids`, `pigtails`, `balding` |
 | `beard` | `shortBeard`, `longBeard`, `moustache` (grown-ups only) |
-| `clothes` | `shirt` (shirt and trousers), `tunic`, `dress`, `robe` |
-| `armor` | `leather` (vest), `plate` (breastplate, pauldrons, tassets, knee cops) |
-| `hands` | `gloves`, `gauntlets` |
-| `feet` | `shoes`, `boots`, `greaves` |
-| `head` | `helmet`, `hood`, `wizardHat`, `crown` |
-| `cape` | `cape` (to the calves), `shortCape` (to the waist), `cloak` (to the ankles, wider, with a collar) |
-| `back` | `backpack` (worn over the cape) |
-| `mainHand` | `sword`, `axe`, `spear`, `staff` (right hand) |
-| `offHand` | `roundShield`, `kiteShield` (left forearm) |
+| `clothes` | `shirt` (shirt and trousers), `vest` (sleeveless, with trousers), `tunic`, `coat` (long coat with buttons), `dress`, `robe` |
+| `armor` | `leather` (vest), `gambeson` (quilted padding), `chainmail`, `breastplate` (cuirass only), `plate` (breastplate, pauldrons, tassets, knee cops) |
+| `hands` | `gloves`, `bracers`, `gauntlets` |
+| `feet` | `sandals`, `shoes`, `boots`, `tallBoots`, `furBoots`, `greaves` (armored) |
+| `head` | `helmet`, `hornedHelmet`, `hood`, `bandana`, `featherHat`, `strawHat`, `wizardHat`, `circlet`, `crown` |
+| `cape` | `mantle` (fur-collared shoulder cape), `shortCape` (to the waist), `cape` (to the calves), `cloak` (to the ankles, wider, with a collar), `royalCape` (to the ankles, ermine trim) |
+| `back` | `backpack`, `quiver` (worn over the cape) |
+| `mainHand` | blades: `dagger`, `sword`, `axe`, `mace`, `warhammer`, `wand`; poles: `spear`, `staff`, `torch`; `bow` (right hand) |
+| `offHand` | `buckler`, `roundShield`, `kiteShield`, `towerShield` (left forearm) |
 
 An entry is either the item name or `{ "item": "...", "color": "#...", "accent": "#..." }`.
 `color` is the main color and `accent` the second one, such as trousers under a tunic, a cape clasp
@@ -82,10 +83,11 @@ far out it reaches, so the next one goes around it: plate armor sits outside the
 widens to hang over tassets or a robe. Headwear can hide the top of the hair, so a helmet doesn't
 end up with hair poking through it.
 
-**Held items change the animations.** A sword or axe is held like a blade, a spear or staff like
-a pole, and a shield sits on the forearm. The rest pose, the walk (less arm swing for a held pole),
-the combat guard and the attack (a chop for blades, a thrust for poles, a punch for empty hands)
-all adapt to what the hands hold. Long skirts and robes make the stance and stride narrower, so the
+**Held items change the animations.** Blades (sword, axe, mace...) are carried pointing forward,
+poles (spear, staff, torch) upright, a bow upright at the side; a shield sits on the forearm. The
+rest pose, the walk (less arm swing for a held pole), the combat guard and the attack all adapt to
+what the hands hold: a chop for blades, a thrust for poles, aim and draw for a bow, a punch for
+empty hands. A torch's flame flickers (an extra overlay clip, `flicker`). Long skirts and robes make the stance and stride narrower, so the
 legs don't poke through.
 
 ### Adding an item
@@ -118,14 +120,14 @@ The tools on `ctx`:
 | `ctx.headShell(name, material, r, az0, az1, polar0, polar1)` | part of a shell around the head (azimuth 0 = front, 90 = left; polar 0 = top) |
 | `ctx.hp([x, y, z])`, `ctx.onHead(r, polar, az)` | head positions: design as if the head were a sphere of radius `R`, and `hp` maps the point onto the real egg-shaped head |
 | `ctx.layer` | outermost covering so far per region (`torso`, `arm`, `foreArm`, `leg`, `shin`), as a factor of the bare size. Grow it when your item wraps a region |
-| `ctx.hides`, `ctx.grip`, `ctx.shield`, `ctx.skirtR` | what is hidden, how the main hand holds (`blade`/`pole`), whether a shield is worn, the widest skirt |
+| `ctx.hides`, `ctx.grip`, `ctx.shield`, `ctx.skirtR` | what is hidden, how the main hand holds (`blade`/`pole`/`bow`), whether a shield is worn, the widest skirt |
 | sockets | weapons attach to the `grip_R` joint, pointing along its +Z; shields to `mount_L`, facing its +X |
 
 ## Textures
 
 Materials can use a **procedural texture**: a small tileable grayscale pattern generated in code
 ([src/rig/textures.js](../src/rig/textures.js)) that slightly shades the color: `fabric`, `knit`,
-`leather`, `metal`, `wood`, `skin`, `hair`, `noise`. It gives cloth a weave, leather a grain and
+`quilt`, `chain`, `fur`, `leather`, `metal`, `wood`, `skin`, `hair`, `noise`. It gives cloth a weave, leather a grain and
 wood its rings, so the characters don't look like clean plastic. In the web viewer the same pattern
 is also used as a bump map.
 

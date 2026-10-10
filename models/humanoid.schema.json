@@ -171,7 +171,7 @@
           ]
         },
         "clothes": {
-          "description": "Clothes: shirt, tunic, dress, robe. A name, or { item, color, accent } to recolor it.",
+          "description": "Clothes: shirt, tunic, dress, robe, vest, coat. A name, or { item, color, accent } to recolor it.",
           "oneOf": [
             {
               "enum": [
@@ -179,6 +179,8 @@
                 "tunic",
                 "dress",
                 "robe",
+                "vest",
+                "coat",
                 "none"
               ]
             },
@@ -194,7 +196,9 @@
                     "shirt",
                     "tunic",
                     "dress",
-                    "robe"
+                    "robe",
+                    "vest",
+                    "coat"
                   ]
                 },
                 "color": {
@@ -210,12 +214,15 @@
           ]
         },
         "armor": {
-          "description": "Armor: leather, plate. A name, or { item, color, accent } to recolor it.",
+          "description": "Armor: leather, plate, chainmail, breastplate, gambeson. A name, or { item, color, accent } to recolor it.",
           "oneOf": [
             {
               "enum": [
                 "leather",
                 "plate",
+                "chainmail",
+                "breastplate",
+                "gambeson",
                 "none"
               ]
             },
@@ -229,7 +236,10 @@
                 "item": {
                   "enum": [
                     "leather",
-                    "plate"
+                    "plate",
+                    "chainmail",
+                    "breastplate",
+                    "gambeson"
                   ]
                 },
                 "color": {
@@ -245,13 +255,15 @@
           ]
         },
         "cape": {
-          "description": "Cape: cape, shortCape, cloak. A name, or { item, color, accent } to recolor it.",
+          "description": "Cape: cape, shortCape, cloak, mantle, royalCape. A name, or { item, color, accent } to recolor it.",
           "oneOf": [
             {
               "enum": [
                 "cape",
                 "shortCape",
                 "cloak",
+                "mantle",
+                "royalCape",
                 "none"
               ]
             },
@@ -266,7 +278,9 @@
                   "enum": [
                     "cape",
                     "shortCape",
-                    "cloak"
+                    "cloak",
+                    "mantle",
+                    "royalCape"
                   ]
                 },
                 "color": {
@@ -282,12 +296,13 @@
           ]
         },
         "hands": {
-          "description": "Hands: gloves, gauntlets. A name, or { item, color, accent } to recolor it.",
+          "description": "Hands: gloves, gauntlets, bracers. A name, or { item, color, accent } to recolor it.",
           "oneOf": [
             {
               "enum": [
                 "gloves",
                 "gauntlets",
+                "bracers",
                 "none"
               ]
             },
@@ -301,7 +316,8 @@
                 "item": {
                   "enum": [
                     "gloves",
-                    "gauntlets"
+                    "gauntlets",
+                    "bracers"
                   ]
                 },
                 "color": {
@@ -317,13 +333,16 @@
           ]
         },
         "feet": {
-          "description": "Feet: shoes, boots, greaves. A name, or { item, color, accent } to recolor it.",
+          "description": "Feet: shoes, boots, greaves, sandals, tallBoots, furBoots. A name, or { item, color, accent } to recolor it.",
           "oneOf": [
             {
               "enum": [
                 "shoes",
                 "boots",
                 "greaves",
+                "sandals",
+                "tallBoots",
+                "furBoots",
                 "none"
               ]
             },
@@ -338,7 +357,10 @@
                   "enum": [
                     "shoes",
                     "boots",
-                    "greaves"
+                    "greaves",
+                    "sandals",
+                    "tallBoots",
+                    "furBoots"
                   ]
                 },
                 "color": {
@@ -354,7 +376,7 @@
           ]
         },
         "head": {
-          "description": "Head: helmet, hood, wizardHat, crown. A name, or { item, color, accent } to recolor it.",
+          "description": "Head: helmet, hood, wizardHat, crown, hornedHelmet, featherHat, bandana, strawHat, circlet. A name, or { item, color, accent } to recolor it.",
           "oneOf": [
             {
               "enum": [
@@ -362,6 +384,11 @@
                 "hood",
                 "wizardHat",
                 "crown",
+                "hornedHelmet",
+                "featherHat",
+                "bandana",
+                "strawHat",
+                "circlet",
                 "none"
               ]
             },
@@ -377,7 +404,12 @@
                     "helmet",
                     "hood",
                     "wizardHat",
-                    "crown"
+                    "crown",
+                    "hornedHelmet",
+                    "featherHat",
+                    "bandana",
+                    "strawHat",
+                    "circlet"
                   ]
                 },
                 "color": {
@@ -393,11 +425,12 @@
           ]
         },
         "back": {
-          "description": "Back: backpack. A name, or { item, color, accent } to recolor it.",
+          "description": "Back: backpack, quiver. A name, or { item, color, accent } to recolor it.",
           "oneOf": [
             {
               "enum": [
                 "backpack",
+                "quiver",
                 "none"
               ]
             },
@@ -410,7 +443,8 @@
               "properties": {
                 "item": {
                   "enum": [
-                    "backpack"
+                    "backpack",
+                    "quiver"
                   ]
                 },
                 "color": {
@@ -426,7 +460,7 @@
           ]
         },
         "mainHand": {
-          "description": "Main hand: sword, axe, spear, staff. A name, or { item, color, accent } to recolor it.",
+          "description": "Main hand: sword, axe, spear, staff, dagger, mace, warhammer, torch, wand, bow. A name, or { item, color, accent } to recolor it.",
           "oneOf": [
             {
               "enum": [
@@ -434,6 +468,12 @@
                 "axe",
                 "spear",
                 "staff",
+                "dagger",
+                "mace",
+                "warhammer",
+                "torch",
+                "wand",
+                "bow",
                 "none"
               ]
             },
@@ -449,7 +489,13 @@
                     "sword",
                     "axe",
                     "spear",
-                    "staff"
+                    "staff",
+                    "dagger",
+                    "mace",
+                    "warhammer",
+                    "torch",
+                    "wand",
+                    "bow"
                   ]
                 },
                 "color": {
@@ -465,12 +511,14 @@
           ]
         },
         "offHand": {
-          "description": "Off hand: roundShield, kiteShield. A name, or { item, color, accent } to recolor it.",
+          "description": "Off hand: roundShield, kiteShield, buckler, towerShield. A name, or { item, color, accent } to recolor it.",
           "oneOf": [
             {
               "enum": [
                 "roundShield",
                 "kiteShield",
+                "buckler",
+                "towerShield",
                 "none"
               ]
             },
@@ -484,7 +532,9 @@
                 "item": {
                   "enum": [
                     "roundShield",
-                    "kiteShield"
+                    "kiteShield",
+                    "buckler",
+                    "towerShield"
                   ]
                 },
                 "color": {
@@ -542,7 +592,10 @@
               "leather",
               "metal",
               "wood",
-              "hair"
+              "hair",
+              "chain",
+              "fur",
+              "quilt"
             ]
           },
           "textureScale": {

@@ -1,0 +1,26 @@
+{
+  "$schema": "../humanoid.schema.json",
+  "generator": "humanoid",
+  "id": "archer",
+  "name": "Archer",
+  "description": "Generated humanoid: an archer in a long coat and bronze breastplate, with a feathered hat, bow and quiver.",
+  "body": {
+    "sex": "female",
+    "age": 26,
+    "height": 1,
+    "girth": 1,
+    "skin": "#f2c9a5",
+    "eyes": "#5a3a22",
+    "hairColor": "#2a1d1a"
+  },
+  "equipment": {
+    "hair": "braids",
+    "clothes": "coat",
+    "armor": "breastplate",
+    "hands": "bracers",
+    "feet": "tallBoots",
+    "head": "featherHat",
+    "back": "quiver",
+    "mainHand": "bow"
+  }
+}

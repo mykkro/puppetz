@@ -1,0 +1,32 @@
+{
+  "$schema": "../humanoid.schema.json",
+  "generator": "humanoid",
+  "id": "viking",
+  "name": "Viking",
+  "description": "Generated humanoid: a stout red-bearded warrior in chain mail and a horned helmet, with a war hammer and tower shield.",
+  "body": {
+    "sex": "male",
+    "age": 40,
+    "height": 0.9,
+    "girth": 1.25,
+    "skin": "#f2c9a5",
+    "eyes": "#3a5f9e",
+    "hairColor": "#c8562e"
+  },
+  "equipment": {
+    "hair": "long",
+    "beard": "longBeard",
+    "clothes": {
+      "item": "tunic",
+      "color": "#3f5f8a",
+      "accent": "#5a4632"
+    },
+    "armor": "chainmail",
+    "hands": "gauntlets",
+    "feet": "furBoots",
+    "head": "hornedHelmet",
+    "mainHand": "warhammer",
+    "offHand": "towerShield"
+  },
+  "expression": "angry"
+}

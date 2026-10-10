@@ -124,7 +124,7 @@ A minimal but complete character:
 | `clearcoat`, `clearcoatRoughness` | – | glossy coat layer (exported as `KHR_materials_clearcoat`) |
 | `flatShading` | false | faceted low-poly look (web viewer only, not stored in glTF) |
 | `doubleSided` | false | render back faces, for open shapes like eyelid caps |
-| `texture` | – | procedural pattern that slightly shades the color: `noise`, `skin`, `fabric`, `knit`, `leather`, `metal`, `wood`, `hair` (see [humanoids.md](humanoids.md#textures)) |
+| `texture` | – | procedural pattern that slightly shades the color: `noise`, `skin`, `fabric`, `knit`, `quilt`, `chain`, `fur`, `leather`, `metal`, `wood`, `hair` (see [humanoids.md](humanoids.md#textures)) |
 | `textureScale`, `textureStrength`, `bumpScale` | 1, per type, per type | pattern repeats, how strongly it shades, bump depth (web viewer) |
 
 Materials are PBR metallic-roughness and export to glTF unchanged. Details (logos, pupils, mouths)
@@ -399,7 +399,7 @@ Editors such as VS Code use it automatically through the `$schema` field. From t
 
 ```sh
 npx ajv-cli@5 validate --spec=draft2020 -s models/character.schema.json -d "models/{shark,alzak,chicken}/*.json"
-npx ajv-cli@5 validate --spec=draft2020 -s models/humanoid.schema.json -d "models/{knight,ranger,wizard,villager,dwarf}/*.json"
+npx ajv-cli@5 validate --spec=draft2020 -s models/humanoid.schema.json -d "models/{knight,ranger,wizard,villager,dwarf,archer,viking}/*.json"
 ```
 
 The builder adds checks the schema can't express: parent joints declared first, unknown
