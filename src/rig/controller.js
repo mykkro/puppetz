@@ -60,12 +60,18 @@ export class RigController {
       ?? Object.entries(meta.clips ?? {}).filter(([, c]) => c.layer === 'overlay').map(([n]) => n);
     this.crossfade = ctl.crossfade ?? 0.25;
     this.walkSpeed = ctl.walkSpeed ?? 0.8;
+    this.runSpeed = ctl.runSpeed ?? this.walkSpeed * 2;
+    // Expressions: "face" layer clips, crossfaded independently of the body (base) layer.
+    this.expressions = { ...ctl.expressions };
+    this.expression = null;
+    this.currentFace = null;
     this.turnSpeed = ctl.turnSpeed ?? 8;
 
     this.current = null;
     this.state = null;
     this._startOverlays();
     this.setState('idle', 0);
+    this.setExpression(ctl.defaultExpression ?? Object.keys(this.expressions)[0], 0);
   }
 
   get clipNames() {
@@ -91,17 +97,33 @@ export class RigController {
     this.current = next;
   }
 
+  /** expression: a key of controller.expressions ("happy", "angry", ...) or a raw face clip name. */
+  setExpression(expression, fade = this.crossfade) {
+    if (!expression) return;
+    const next = this.actions.get(this.expressions[expression] ?? expression);
+    this.expression = expression;
+    if (!next || next === this.currentFace) return;
+    next.reset();
+    next.setEffectiveTimeScale(1);
+    next.setEffectiveWeight(1);
+    next.play();
+    if (this.currentFace && fade > 0) this.currentFace.crossFadeTo(next, fade, false);
+    else if (this.currentFace) this.currentFace.stop();
+    this.currentFace = next;
+  }
+
   /** Turn clip playback on/off. Off = rest pose (+ manual overrides): handy for posing. */
   setAnimate(on) {
     this.animate = on;
     if (on) {
       const state = this.state;
-      this.current = null;
+      this.current = this.currentFace = null;
       this._startOverlays();
       this.setState(state, 0);
+      this.setExpression(this.expression, 0);
     } else {
       this.mixer.stopAllAction();
-      this.current = null;
+      this.current = this.currentFace = null;
       this.resetToRest();
     }
   }

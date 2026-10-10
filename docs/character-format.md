@@ -124,9 +124,11 @@ A minimal but complete character:
 | `clearcoat`, `clearcoatRoughness` | – | glossy coat layer (exported as `KHR_materials_clearcoat`) |
 | `flatShading` | false | faceted low-poly look (web viewer only, not stored in glTF) |
 | `doubleSided` | false | render back faces, for open shapes like eyelid caps |
+| `texture` | – | procedural pattern that slightly shades the color: `noise`, `skin`, `fabric`, `knit`, `leather`, `metal`, `wood`, `hair` (see [humanoids.md](humanoids.md#textures)) |
+| `textureScale`, `textureStrength`, `bumpScale` | 1, per type, per type | pattern repeats, how strongly it shades, bump depth (web viewer) |
 
-Materials are PBR metallic-roughness and export to glTF unchanged. There are no textures: every
-detail (logos, pupils, mouths) is geometry.
+Materials are PBR metallic-roughness and export to glTF unchanged. Details (logos, pupils, mouths)
+are geometry; the optional procedural textures only add surface grain.
 
 ### skeleton
 
@@ -229,7 +231,7 @@ Clip fields:
 |---|---|---|
 | `duration` | – | seconds |
 | `loop` | true | non-looping clips hold their last frame |
-| `layer` | `base` | `base`: one at a time, crossfaded. `overlay`: always playing on top |
+| `layer` | `base` | `base`: body clips, one at a time, crossfaded. `face`: expressions, one at a time, crossfaded independently of `base`. `overlay`: always playing on top |
 | `fps` | 30 | bake rate of the exported keyframes |
 | `tracks` | – | list of tracks |
 
@@ -286,6 +288,9 @@ other axes keep their rest values.
 | `states` | – | gameplay state → clip. `idle` and `walk` drive locomotion; every other state (the shark's `eat`, or your `run`, `jump`, `wave`…) shows up in the viewers as a button (web) or under the `e` key (Panda3D, Bevy) |
 | `overlays` | overlay-layer clips | clips that loop on top forever |
 | `walkSpeed` | 0.8 | m/s when walking. Match the stride, see the [guide](creating-a-character.md#7-match-the-walk-speed) |
+| `runSpeed` | 2 × walkSpeed | m/s when running (the `run` state; Shift in the web viewer) |
+| `expressions` | – | expression name → `face` layer clip, e.g. `{ "happy": "face_happy" }` |
+| `defaultExpression` | first expression | the expression the character starts with |
 | `turnSpeed` | 8 | heading smoothing factor (1/s) |
 | `crossfade` | 0.25 | seconds to blend between base clips |
 
@@ -352,6 +357,7 @@ require TRS.
 - Every base-layer clip also contains a constant two-key rest-pose channel for each channel that
   another base clip animates. Crossfades then blend every touched channel back to rest, even in
   engines that only blend channels present in a clip.
+- `face` clips get the same treatment among themselves.
 - Overlay clips contain only their own channels.
 
 **Reading it in an engine.**
@@ -369,6 +375,13 @@ convert on import. Panda3D maps `(x, y, z)` to `(x, −z, y)`, so characters fac
 
 ---
 
+## Generated characters
+
+A character file can also be a short recipe for a generator instead of a full rig:
+`{ "generator": "humanoid", ... }`. The builder expands it into an ordinary definition first
+([src/rig/generators.js](../src/rig/generators.js)). Recipes have their own schema,
+[models/humanoid.schema.json](../models/humanoid.schema.json). See [humanoids.md](humanoids.md).
+
 ## models/index.json
 
 The list of characters the viewers and the GLB builder use:
@@ -385,7 +398,8 @@ Paths are relative to `models/`.
 Editors such as VS Code use it automatically through the `$schema` field. From the command line:
 
 ```sh
-npx ajv-cli@5 validate --spec=draft2020 -s models/character.schema.json -d "models/*/*.json"
+npx ajv-cli@5 validate --spec=draft2020 -s models/character.schema.json -d "models/{shark,alzak,chicken}/*.json"
+npx ajv-cli@5 validate --spec=draft2020 -s models/humanoid.schema.json -d "models/{knight,ranger,wizard,villager,dwarf}/*.json"
 ```
 
 The builder adds checks the schema can't express: parent joints declared first, unknown

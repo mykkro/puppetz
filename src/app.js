@@ -5,6 +5,7 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { buildCharacter } from './rig/character.js';
 import { RigController, findCharacterRoot } from './rig/controller.js';
 import { exportGLB } from './rig/exportGLB.js';
+import { BODY_OPTIONS, BODY_DEFAULTS, SKIN_TONES, HAIR_COLORS, SLOTS, itemsForSlot, resolveEquip } from './rig/humanoid.js';
 
 const $ = (id) => document.getElementById(id);
 const params = new URLSearchParams(location.search);
@@ -100,7 +101,7 @@ const loader = new GLTFLoader();
 const state = {
   index: null, entry: null, source: 'json', def: null, glbBuffer: null,
   model: null, controller: null, meta: null, selected: null,
-  mode: 'idle', heading: 0, moving: false,
+  mode: 'idle', heading: 0, moving: false, expression: params.get('expr'),
 };
 
 function setStatus(text, isError = false) {
@@ -135,32 +136,48 @@ function disposeModel() {
   state.model = state.controller = state.selected = null;
 }
 
-function mountModel(model, clips, meta) {
+// keepView: rebuilding the same character after an edit keeps the camera, position and pose overrides.
+function mountModel(model, clips, meta, keepView = false) {
+  const prev = keepView && state.controller ? { overrides: state.controller.overrides, selected: state.selected?.name } : null;
   disposeModel();
   model.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
   holder.add(model);
-  holder.position.set(0, 0, 0);
-  holder.rotation.set(0, 0, 0);
-  state.heading = 0;
+  if (!prev) {
+    holder.position.set(0, 0, 0);
+    holder.rotation.set(0, 0, 0);
+    state.heading = 0;
+  }
   state.model = model;
   state.meta = meta;
   state.controller = new RigController(model, clips, meta);
   state.controller.speed = Number($('speed').value);
   state.controller.setAnimate($('animate').checked);
+  if (prev) for (const [k, v] of prev.overrides) state.controller.setOverride(k, v);
+  if (state.expression) state.controller.setExpression(state.expression, 0);
+  state.expression = state.controller.expression;
+
+  $('clip').innerHTML = '<option value="">— by mode —</option>'
+    + state.controller.clipNames.map((n) => `<option>${n}</option>`).join('');
+  $('bone').innerHTML = state.controller.bones.map((b) => `<option>${b.name}</option>`).join('');
+  selectBone(state.controller.boneByName.get(prev?.selected) ?? state.controller.bones.find((b) => b.name === 'head') ?? state.controller.bones[0]);
+  buildModeButtons();
+  buildExpressionButtons();
+  if (prev) return;
 
   const view = meta.view ?? {};
   const target = new THREE.Vector3(...(view.target ?? [0, 0.8, 0]));
-  const d = view.distance ?? 3;
+  // ?focus=<bone> aims the camera at a joint instead, e.g. focus=skull&zoom=0.35 for a face close-up.
+  const focus = state.controller.boneByName.get(params.get('focus'));
+  if (focus) { model.updateWorldMatrix(true, true); focus.getWorldPosition(target); }
+  const d = (view.distance ?? 3) * (Number(params.get('zoom')) || 1);
   controls.target.copy(target);
   // ?yaw=degrees orbits the start position around the character (0 = front, 90 = its left side).
   const yaw = THREE.MathUtils.degToRad(Number(params.get('yaw') ?? 30));
   camera.position.copy(target).add(new THREE.Vector3(Math.sin(yaw) * 0.97 * d, 0.25 * d, Math.cos(yaw) * 0.97 * d));
   state.viewTarget = target;
+}
 
-  $('clip').innerHTML = '<option value="">— by mode —</option>'
-    + state.controller.clipNames.map((n) => `<option>${n}</option>`).join('');
-  $('bone').innerHTML = state.controller.bones.map((b) => `<option>${b.name}</option>`).join('');
-  selectBone(state.controller.bones.find((b) => b.name === 'head') ?? state.controller.bones[0]);
+function buildModeButtons() {
   // One button per extra controller state (e.g. "eat"), next to Idle / Walk / Wander.
   for (const b of document.querySelectorAll('#modes .extra')) b.remove();
   for (const name of Object.keys(state.controller.states)) {
@@ -174,6 +191,21 @@ function mountModel(model, clips, meta) {
   setMode(state.mode);
 }
 
+function buildExpressionButtons() {
+  const names = Object.keys(state.controller.expressions);
+  $('exprBox').hidden = !names.length;
+  $('expressions').innerHTML = names
+    .map((n) => `<button data-expr="${n}" class="${n === state.expression ? 'on' : ''}">${n[0].toUpperCase() + n.slice(1)}</button>`).join('');
+}
+
+$('expressions').addEventListener('click', (e) => {
+  const name = e.target.dataset.expr;
+  if (!name || !state.controller) return;
+  state.expression = name;
+  state.controller.setExpression(name);
+  for (const b of $('expressions').children) b.classList.toggle('on', b.dataset.expr === name);
+});
+
 async function loadEntry(entry, source) {
   state.entry = entry;
   state.source = source;
@@ -185,10 +217,12 @@ async function loadEntry(entry, source) {
       state.def = def;
       state.glbBuffer = null;
       mountModel(root, clips, meta);
+      showEditor(def.generator === 'humanoid');
     } else {
       const res = await fetch(`models/${entry.glb}`, { cache: 'no-cache' });
       if (!res.ok) throw new Error(`models/${entry.glb} not found — run "npm run build:glb"`);
       await loadGLBBuffer(await res.arrayBuffer());
+      showEditor(false);
     }
     setStatus(`${entry.name}: ${state.controller.bones.length} bones, clips: ${state.controller.clipNames.join(', ')}`);
     history.replaceState(null, '', `?model=${entry.id}&source=${source}`);
@@ -322,6 +356,127 @@ addEventListener('drop', async (e) => {
   }
 });
 
+// ------------------------------------------------------------------ character editor (generated humanoids)
+
+function showEditor(on) {
+  $('editor').hidden = !on;
+  if (on) buildEditor();
+}
+
+function buildEditor() {
+  const body = { ...BODY_DEFAULTS, ...state.def.body };
+  $('textures').checked = state.def.textures !== false;
+  $('bodyControls').innerHTML = BODY_OPTIONS.map((o) => {
+    const v = body[o.key];
+    if (o.options) {
+      const opts = o.options.map((x) => `<option ${x === v ? 'selected' : ''}>${x}</option>`).join('');
+      return `<label class="field"><span>${o.label}</span><select data-body="${o.key}">${opts}</select><span></span></label>`;
+    }
+    if (o.range) {
+      const [min, max, step] = o.range;
+      return `<label class="field"><span>${o.label}</span><input type="range" data-body="${o.key}" min="${min}" max="${max}" step="${step}" value="${v}"><output>${v}</output></label>`;
+    }
+    const palette = { skin: SKIN_TONES, hairColor: HAIR_COLORS }[o.key];
+    const swatches = palette
+      ? `<span class="swatches">${palette.map((c) => `<button data-swatch="${o.key}" data-value="${c}" class="swatch" style="background:${c}" aria-label="${o.label} ${c}"></button>`).join('')}</span>`
+      : '<span></span>';
+    const input = `<label class="field"><span>${o.label}</span><span></span><input type="color" data-body="${o.key}" value="${v}"></label>`;
+    return palette ? `${input}<div class="field palette">${swatches}</div>` : input;
+  }).join('');
+
+  const eq = state.def.equipment ?? {};
+  // Hair and beard items without their own color follow the body's hair color.
+  $('slotControls').innerHTML = SLOTS.map(({ key, label }) => {
+    const cur = resolveEquip(eq[key], body.hairColor);
+    const opts = [{ id: 'none', label: '—' }, ...itemsForSlot(key)]
+      .map((o) => `<option value="${o.id}" ${o.id === (cur?.id ?? 'none') ? 'selected' : ''}>${o.label}</option>`).join('');
+    const colors = cur
+      ? `<span class="swatches"><input type="color" data-color="${key}" value="${cur.color}">${cur.item.colors.accent ? `<input type="color" data-accent="${key}" value="${cur.accent}">` : ''}</span>`
+      : '<span></span>';
+    return `<label class="field"><span>${label}</span><select data-slot="${key}">${opts}</select>${colors}</label>`;
+  }).join('');
+}
+
+function rebuildRecipe(rebuildUI = false) {
+  try {
+    const { root, clips, meta } = buildCharacter(state.def);
+    mountModel(root, clips, meta, true);
+    if (rebuildUI) buildEditor();
+    setStatus(`${state.def.name}: ${state.controller.bones.length} bones, walk ${meta.controller.walkSpeed} m/s, run ${meta.controller.runSpeed} m/s`);
+  } catch (err) {
+    console.error(err);
+    setStatus(err.message, true);
+  }
+}
+
+$('editor').addEventListener('input', (e) => {
+  const t = e.target;
+  const def = state.def;
+  if (t.dataset.body) {
+    const v = t.type === 'range' ? Number(t.value) : t.value;
+    def.body = { ...BODY_DEFAULTS, ...def.body, [t.dataset.body]: v };
+    if (t.type === 'range') t.nextElementSibling.textContent = v;
+    rebuildRecipe(t.dataset.body === 'hairColor');
+  } else if (t.dataset.slot) {
+    def.equipment = { ...def.equipment };
+    if (t.value === 'none') delete def.equipment[t.dataset.slot];
+    else def.equipment[t.dataset.slot] = t.value;
+    rebuildRecipe(true);
+  } else if (t.dataset.color || t.dataset.accent) {
+    const slot = t.dataset.color ?? t.dataset.accent;
+    const cur = resolveEquip(def.equipment[slot], { ...BODY_DEFAULTS, ...def.body }.hairColor);
+    def.equipment[slot] = {
+      item: cur.id, color: cur.color, ...(cur.item.colors.accent && { accent: cur.accent }),
+      [t.dataset.color ? 'color' : 'accent']: t.value,
+    };
+    rebuildRecipe();
+  }
+});
+$('textures').addEventListener('change', () => {
+  if ($('textures').checked) delete state.def.textures;
+  else state.def.textures = false;
+  rebuildRecipe();
+});
+$('bodyControls').addEventListener('click', (e) => {
+  const key = e.target.dataset.swatch;
+  if (!key) return;
+  e.preventDefault();
+  state.def.body = { ...BODY_DEFAULTS, ...state.def.body, [key]: e.target.dataset.value };
+  rebuildRecipe(true);
+});
+
+const pick = (a) => a[Math.floor(Math.random() * a.length)];
+const randomColor = () => `#${[0, 0, 0].map(() => Math.floor(40 + Math.random() * 190).toString(16).padStart(2, '0')).join('')}`;
+$('randomize').addEventListener('click', () => {
+  const sex = pick(['male', 'female']);
+  const age = pick([8, 14, 22, 30, 40, 70]);
+  state.def.body = {
+    sex, age, height: +(0.85 + Math.random() * 0.3).toFixed(2), girth: +(0.85 + Math.random() * 0.4).toFixed(2),
+    skin: pick(SKIN_TONES), eyes: pick(['#3a5f9e', '#5a3a22', '#3f7a3a', '#6a6a6a', '#7a4ab0']),
+    hairColor: pick(Math.random() < 0.85 ? HAIR_COLORS.slice(0, 7) : HAIR_COLORS.slice(8)),
+  };
+  const equipment = {
+    hair: pick(sex === 'male' ? ['short', 'spiky', 'bob', 'balding', 'afro', 'mohawk'] : ['bob', 'long', 'ponytail', 'bun', 'afro', 'braids', 'pigtails']),
+    ...(sex === 'male' && age > 18 && Math.random() < 0.4 && { beard: pick(['shortBeard', 'longBeard', 'moustache']) }),
+  };
+  for (const { key } of SLOTS) {
+    if (key === 'hair' || key === 'beard') continue;
+    if (!['clothes', 'feet'].includes(key) && Math.random() < 0.45) continue; // optional slots stay empty sometimes
+    const it = pick(itemsForSlot(key));
+    equipment[key] = { item: it.id, color: Math.random() < 0.5 ? it.colors.color : randomColor(), ...(it.colors.accent && { accent: it.colors.accent }) };
+  }
+  state.def.equipment = equipment;
+  rebuildRecipe(true);
+});
+
+$('saveRecipe').addEventListener('click', () => {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([`${JSON.stringify(state.def, null, 2)}\n`], { type: 'application/json' }));
+  a.download = `${state.def.id ?? 'character'}.json`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+});
+
 // ------------------------------------------------------------------ locomotion
 
 const keys = new Set();
@@ -336,7 +491,8 @@ const prevPos = new THREE.Vector3();
 function updateLocomotion(dt) {
   const ctl = state.controller;
   if (!ctl) return;
-  const speed = ctl.walkSpeed * ctl.speed;
+  const running = !!ctl.states.run && (keys.has('ShiftLeft') || keys.has('ShiftRight') || state.mode === 'run');
+  const speed = (running ? ctl.runSpeed : ctl.walkSpeed) * ctl.speed;
 
   const input = new THREE.Vector2(
     (keys.has('KeyD') || keys.has('ArrowRight') ? 1 : 0) - (keys.has('KeyA') || keys.has('ArrowLeft') ? 1 : 0),
@@ -372,7 +528,8 @@ function updateLocomotion(dt) {
 
   if (state.mode !== 'clip') {
     const extra = state.mode !== 'wander' && ctl.states[state.mode] ? state.mode : 'idle';
-    ctl.setState(walking || state.mode === 'walk' ? 'walk' : extra);
+    const moving = walking || state.mode === 'walk' || state.mode === 'run';
+    ctl.setState(moving ? (running ? 'run' : 'walk') : extra);
   }
 }
 
@@ -380,15 +537,18 @@ function updateLocomotion(dt) {
 
 const clock = new THREE.Clock();
 let skipTime = Number(params.get('t')) || 0;
+let freezeNow = false;
 renderer.setAnimationLoop(() => {
   let dt = Math.min(clock.getDelta(), 0.1);
   if (skipTime > 0 && state.controller) {
     dt = skipTime; // ?t=seconds: jump the animation forward once (for screenshots of a specific moment)
     skipTime = 0;
+    freezeNow = params.get('freeze') === '1'; // &freeze=1 then holds that pose
   }
   prevPos.copy(holder.position);
   updateLocomotion(dt);
   state.controller?.update(dt);
+  if (freezeNow) { state.controller.speed = 0; freezeNow = false; }
 
   // Camera follows the character.
   const delta = holder.position.clone().sub(prevPos);

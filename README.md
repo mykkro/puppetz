@@ -22,6 +22,14 @@ strong clawed legs. His **eat** animation brings a fish to his mouth; his arms a
 has to lean down to bite it. Two more sample
 characters are included: **Alzák**, a green alien in a tin can, and a cartoon **chicken**.
 
+**Humanoids.** RPG-style people are generated from a short recipe: a body (sex, age, height,
+girth, skin, eyes) plus items from a library in slots: hair, beard, clothes, armor, gloves,
+boots, headwear, cape or backpack, a weapon and a shield. Items are sized from the body, so any
+item fits any character, and they layer (clothes, then armor, then a cape). Every humanoid can
+idle, walk, run, talk, fight and attack, and shows six expressions (neutral, happy, sad,
+agitated, angry, sleepy) on a separate face layer. Edit them live in the viewer's **Character**
+panel. See [docs/humanoids.md](docs/humanoids.md).
+
 <p align="center">
   <img src="docs/images/hero-alzak.png" width="24%" alt="Alzák, a green alien in a tin can, standing with hands on hips">
   <img src="docs/images/hero-chicken.png" width="24%" alt="Cartoon chicken walking with wings crossed">
@@ -39,7 +47,8 @@ npm start             # http://localhost:8080
 
 In the viewer:
 - Switch model, and choose whether it is built live from **JSON** or loaded from the **GLB**.
-- Play Idle / Walk / Wander, or any extra state the character has (the shark's **Eat**), or walk with **WASD** or the arrow keys.
+- Play Idle / Walk / Wander, or any extra state the character has (the shark's **Eat**, a humanoid's Run / Talk / Combat / Attack), or walk with **WASD** or the arrow keys (**Shift** runs).
+- Humanoids: pick an **Expression**, and change body and equipment in the **Character** panel (**Randomize**, **Save JSON**).
 - Turn on **Show skeleton**, click a body part to select its joint, and rotate it with the X/Y/Z sliders.
 - **Download GLB**, or **drop any .glb** onto the page to inspect and pose it.
 
@@ -47,8 +56,10 @@ Edit a model's JSON and reload the page with source "JSON" to see the change imm
 `npm run build:glb` afterwards to update the GLB.
 
 URL options: `?model=shark&source=glb&mode=eat` picks the model, source and state (`idle`, `walk`,
-`wander` or any extra state); `&skeleton=1` shows the rig; `&ui=0` hides the panels; `&t=1.0`
-jumps the animation forward; `&yaw=90` starts the camera at the character's side (0 = front).
+`wander` or any extra state); `&expr=happy` the expression; `&skeleton=1` shows the rig; `&ui=0`
+hides the panels; `&t=1.0` jumps the animation forward (`&freeze=1` then holds that pose);
+`&yaw=90` starts the camera at the character's side (0 = front); `&zoom=0.4&focus=skull` moves the
+camera closer and aims it at a joint.
 
 ## Screenshots
 
@@ -66,15 +77,21 @@ jumps the animation forward; `&yaw=90` starts the camera at the character's side
 index.html, src/app.js       web viewer (three.js from CDN)
 src/rig/                     shared rig library (browser + Node)
   geometry.js                  primitive shapes: sphere, box, capsule, cone, torus, lathe, tube...
+  textures.js                  procedural textures (fabric, leather, metal, wood, skin...)
   character.js                 JSON -> three.js scene graph + baked AnimationClips
-  controller.js                playback: crossfades, overlay clips, manual pose overrides
+  generators.js                recipe ({ "generator": ... }) -> character JSON
+  humanoid.js                  humanoid generator: body, face, expressions, clips
+  items.js                     the item library: clothes, armor, hair, hats, weapons, shields...
+  controller.js                playback: crossfades, expressions, overlay clips, manual pose overrides
   exportGLB.js                 scene + clips -> GLB
 tools/
   build-glb.mjs                npm run build:glb [id...]
+  build-humanoid-schema.mjs    npm run build:schema (models/humanoid.schema.json from the item library)
   serve.mjs                    npm start (static server; browsers block fetch() on file://)
 models/
   index.json                   list of characters (used by all viewers)
   character.schema.json        JSON Schema for character files
+  humanoid.schema.json         JSON Schema for humanoid recipes (generated)
   <id>/<id>.json               character description (source of truth)
   <id>/<id>.glb                baked model (generated, committed for the engine examples)
 examples/
@@ -91,6 +108,7 @@ LICENSE                      MIT
 
 - **[docs/creating-a-character.md](docs/creating-a-character.md)**: start here to make a new character.
 - **[docs/character-format.md](docs/character-format.md)**: every JSON field, and what ends up in the GLB.
+- **[docs/humanoids.md](docs/humanoids.md)**: humanoid recipes, the item library and how to add items, textures, expressions.
 - **[examples/README.md](examples/README.md)**: using the GLBs from Python or Rust.
 
 ## How it works, in one paragraph
@@ -109,7 +127,8 @@ joint limits, travels inside the GLB as glTF `extras`.
 | `npm start` | serve the viewer on http://localhost:8080 (`PORT=…` to change) |
 | `npm run build:glb` | rebuild every GLB listed in `models/index.json` |
 | `npm run build:glb -- chicken` | rebuild only the given ids |
-| `npx ajv-cli@5 validate --spec=draft2020 -s models/character.schema.json -d "models/*/*.json"` | validate the character files |
+| `npm run build:schema` | regenerate `models/humanoid.schema.json` after adding items |
+| `npx ajv-cli@5 validate --spec=draft2020 -s models/character.schema.json -d "models/{shark,alzak,chicken}/*.json"` | validate the hand-written character files (humanoid recipes: `-s models/humanoid.schema.json`) |
 
 ## License
 

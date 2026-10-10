@@ -3,6 +3,8 @@
 // Works in the browser and in Node (no DOM / canvas needed), so the same code produces the GLBs.
 import * as THREE from 'three';
 import { createGeometry } from './geometry.js';
+import { expandGenerator } from './generators.js';
+import { applyTexture } from './textures.js';
 
 const DEG = Math.PI / 180;
 const NAME_RE = /^[A-Za-z0-9_-]+$/; // glTF/three.js animation bindings break on '.', '[', ']', '/', ':'
@@ -86,7 +88,7 @@ export function expandSymmetry(def) {
 // ---------------------------------------------------------------- materials
 
 function createMaterial(name, m) {
-  const params = {
+  let params = {
     name,
     color: new THREE.Color(m.color ?? '#cccccc'),
     roughness: m.roughness ?? 0.6,
@@ -102,6 +104,7 @@ function createMaterial(name, m) {
     params.transparent = true;
     params.opacity = m.opacity;
   }
+  params = applyTexture(params, m);
   if (m.clearcoat !== undefined) {
     return new THREE.MeshPhysicalMaterial({ ...params, clearcoat: m.clearcoat, clearcoatRoughness: m.clearcoatRoughness ?? 0.1 });
   }
@@ -120,7 +123,7 @@ function applyTRS(obj, { position, rotation, scale, rotationOrder }) {
  * @returns {{ root: THREE.Group, bones: Map<string, THREE.Object3D>, clips: THREE.AnimationClip[], meta: object }}
  */
 export function buildCharacter(rawDef) {
-  const def = expandSymmetry(rawDef);
+  const def = expandSymmetry(expandGenerator(rawDef));
 
   const root = new THREE.Group();
   root.name = def.id;
@@ -161,16 +164,20 @@ export function buildCharacter(rawDef) {
     bone.add(mesh);
   }
 
-  // Every base-layer clip gets a (constant rest) track for each channel any other base clip animates.
-  // Engines blend only the channels present in a clip, so without this a channel animated by idle
-  // but not by walk would freeze at its last idle value after an idle -> walk crossfade (e.g. Bevy).
-  const isBase = (c) => (c.layer ?? 'base') === 'base';
-  const baseChannels = new Set();
+  // Every clip of a crossfaded layer ("base" body clips, "face" expressions) gets a (constant rest)
+  // track for each channel any other clip of that layer animates. Engines blend only the channels
+  // present in a clip, so without this a channel animated by idle but not by walk would freeze at
+  // its last idle value after an idle -> walk crossfade (e.g. Bevy). Overlays only carry their own.
+  const layerOf = (c) => c.layer ?? 'base';
+  const shared = new Map();
   for (const clip of Object.values(def.clips)) {
-    if (isBase(clip)) for (const t of clip.tracks) baseChannels.add(`${t.bone}|${t.channel}`);
+    const layer = layerOf(clip);
+    if (layer === 'overlay') continue;
+    if (!shared.has(layer)) shared.set(layer, new Set());
+    for (const t of clip.tracks) shared.get(layer).add(`${t.bone}|${t.channel}`);
   }
   const clips = Object.entries(def.clips).map(([name, clip]) =>
-    bakeClip(name, clip, def, bones, isBase(clip) ? baseChannels : new Set()));
+    bakeClip(name, clip, def, bones, shared.get(layerOf(clip)) ?? new Set()));
 
   // Everything the runtime needs besides geometry. Stored in userData so it survives glTF export (as "extras").
   const meta = {

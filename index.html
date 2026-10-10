@@ -20,6 +20,17 @@
       padding: 12px; backdrop-filter: blur(6px); width: 250px; max-height: calc(100% - 32px); overflow: auto; }
     #left { top: 16px; left: 16px; }
     #right { top: 16px; right: 16px; }
+    #editor { bottom: 16px; right: 16px; width: 290px; max-height: calc(100% - 300px); overflow-x: hidden; }
+    .field select { min-width: 0; }
+    .field { display: grid; grid-template-columns: 74px 1fr auto; align-items: center; gap: 6px; margin: 4px 0; }
+    .field input[type=range] { width: 100%; }
+    .field output { color: var(--muted); font-variant-numeric: tabular-nums; min-width: 28px; text-align: right; }
+    .field .swatches { display: flex; gap: 3px; }
+    .swatch { width: 16px; height: 16px; padding: 0; border-radius: 4px; }
+    .field.palette { display: block; margin: -2px 0 6px 80px; }
+    .field.palette .swatches { flex-wrap: wrap; }
+    input[type=color] { width: 26px; height: 22px; padding: 0; border: 1px solid var(--line); border-radius: 4px; background: none; }
+    #modes button, #expressions button { flex: 0 1 auto; }
     .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; cursor: pointer;
       user-select: none; margin: -4px 0 6px; }
     .panel-head h1, .panel-head h2 { margin: 0; }
@@ -55,6 +66,7 @@
       /* Phones: panels collapse to two small tabs at the top; an open one drops down over the scene. */
       #left { top: 8px; left: 8px; }
       #right { top: 8px; right: 8px; }
+      #editor { top: auto; bottom: 8px; right: 8px; max-height: 60%; max-height: 60dvh; }
       .panel { width: auto; max-width: calc(100% - 16px); max-height: 60%; max-height: 60dvh; }
       .panel:not(.collapsed) { left: 8px; right: 8px; max-width: none; z-index: 1; }
       .toggle { font-size: 18px; padding: 4px 8px; }
@@ -94,10 +106,28 @@
     <label class="slider"><span></span><input id="speed" type="range" min="0" max="2" step="0.05" value="1"><output id="speedOut">1.00×</output></label>
     <label><input id="animate" type="checkbox" checked> Play clips (off = rest pose)</label>
     <label>Clip <select id="clip"></select></label>
+    <div id="exprBox" hidden>
+      <h2>Expression</h2>
+      <div class="row" id="expressions"></div>
+    </div>
 
     <h2>Export</h2>
     <div class="row"><button id="download">Download GLB</button></div>
     <div id="status"></div>
+    </div>
+  </div>
+
+  <div id="editor" class="panel" hidden>
+    <div class="panel-head"><h2>Character</h2><button class="toggle" aria-label="Collapse panel" aria-expanded="true"></button></div>
+    <div class="panel-body">
+    <div id="bodyControls"></div>
+    <label><input id="textures" type="checkbox" checked> Textures (off = flat colors)</label>
+    <h2>Equipment</h2>
+    <div id="slotControls"></div>
+    <div class="row" style="margin-top:8px">
+      <button id="randomize">Randomize</button>
+      <button id="saveRecipe">Save JSON</button>
+    </div>
     </div>
   </div>
 
@@ -118,7 +148,7 @@
     </div>
   </div>
 
-  <div id="help"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / arrows walk · drag to orbit · click a part to select its bone · drop a .glb to load it</div>
+  <div id="help"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / arrows walk (<kbd>Shift</kbd> runs) · drag to orbit · click a part to select its bone · drop a .glb to load it</div>
   <div id="drop">Drop .glb to load</div>
 
   <script type="module" src="src/app.js"></script>

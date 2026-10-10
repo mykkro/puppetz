@@ -37,6 +37,9 @@
         },
         "overlays": { "type": "array", "items": { "type": "string" }, "description": "Clips that always play on top (blink, breathing...)." },
         "walkSpeed": { "type": "number", "description": "m/s matching the walk clip's stride (avoids foot sliding)." },
+        "runSpeed": { "type": "number", "description": "m/s matching the run clip's stride." },
+        "expressions": { "type": "object", "description": "Expression name -> face-layer clip name.", "additionalProperties": { "type": "string" } },
+        "defaultExpression": { "type": "string" },
         "turnSpeed": { "type": "number", "description": "Heading smoothing factor (1/s)." },
         "crossfade": { "type": "number", "description": "Seconds to blend between base-layer clips." }
       },
@@ -68,6 +71,10 @@
         "clearcoat": { "type": "number", "minimum": 0, "maximum": 1 },
         "clearcoatRoughness": { "type": "number", "minimum": 0, "maximum": 1 },
         "flatShading": { "type": "boolean" },
+        "texture": { "enum": ["noise", "skin", "fabric", "knit", "leather", "metal", "wood", "hair"], "description": "Procedural grayscale pattern multiplied with the color (and used as a bump map in the web viewer)." },
+        "textureScale": { "type": "number", "description": "How many times the texture repeats across the part's UVs." },
+        "textureStrength": { "type": "number", "minimum": 0, "maximum": 1, "description": "How strongly the pattern shades the color." },
+        "bumpScale": { "type": "number" },
         "doubleSided": { "type": "boolean" }
       },
       "additionalProperties": false
@@ -161,7 +168,7 @@
       "properties": {
         "duration": { "type": "number", "exclusiveMinimum": 0 },
         "loop": { "type": "boolean", "default": true },
-        "layer": { "enum": ["base", "overlay"], "default": "base" },
+        "layer": { "enum": ["base", "face", "overlay"], "default": "base", "description": "base: body clips, crossfaded. face: expressions, crossfaded independently of base. overlay: always on top." },
         "fps": { "type": "number", "default": 30, "description": "Bake rate for the exported keyframes." },
         "tracks": { "type": "array", "items": { "$ref": "#/$defs/track" } }
       },

@@ -7,7 +7,8 @@
   "description": "Puppetz: data-driven jointed puppet characters (JSON rig -> three.js / GLB) with idle & walk animations",
   "scripts": {
     "start": "node tools/serve.mjs",
-    "build:glb": "node tools/build-glb.mjs"
+    "build:glb": "node tools/build-glb.mjs",
+    "build:schema": "node tools/build-humanoid-schema.mjs"
   },
   "dependencies": {
     "three": "0.170.0"

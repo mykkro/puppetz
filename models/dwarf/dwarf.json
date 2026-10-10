@@ -1,0 +1,20 @@
+{
+  "$schema": "../humanoid.schema.json",
+  "generator": "humanoid",
+  "id": "dwarf",
+  "name": "Stout warrior",
+  "description": "Generated humanoid: short and stout, with a braided-looking long beard, helmet, axe and kite shield.",
+  "body": { "sex": "male", "age": 45, "height": 0.82, "girth": 1.32, "skin": "#e0a77e", "eyes": "#5a3a22", "hairColor": "#b03a2a" },
+  "equipment": {
+    "hair": "short",
+    "beard": "longBeard",
+    "clothes": { "item": "shirt", "color": "#7a5a3a", "accent": "#4a3a2a" },
+    "armor": "leather",
+    "hands": "gauntlets",
+    "feet": "greaves",
+    "head": { "item": "helmet", "accent": "#e2b53e" },
+    "mainHand": "axe",
+    "offHand": "kiteShield"
+  },
+  "expression": "angry"
+}

@@ -1,0 +1,19 @@
+{
+  "$schema": "../humanoid.schema.json",
+  "generator": "humanoid",
+  "id": "ranger",
+  "name": "Ranger",
+  "description": "Generated humanoid: a slim ranger in a hooded tunic and leather vest, with a spear and a backpack.",
+  "body": { "sex": "female", "age": 24, "height": 1.05, "girth": 0.9, "skin": "#e0a77e", "eyes": "#3f7a3a", "hairColor": "#2a1d1a" },
+  "equipment": {
+    "hair": "long",
+    "clothes": { "item": "tunic", "color": "#4f7a3c", "accent": "#5a4632" },
+    "armor": "leather",
+    "hands": "gloves",
+    "feet": "boots",
+    "head": { "item": "hood", "color": "#3f5f34" },
+    "back": "backpack",
+    "mainHand": "spear"
+  },
+  "expression": "happy"
+}

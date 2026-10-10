@@ -1,0 +1,17 @@
+{
+  "$schema": "../humanoid.schema.json",
+  "generator": "humanoid",
+  "id": "wizard",
+  "name": "Wizard",
+  "description": "Generated humanoid: an old wizard in a starry-blue robe and pointy hat, with a long beard and a magic staff.",
+  "body": { "sex": "male", "age": 78, "height": 0.95, "girth": 1, "skin": "#f2c9a5", "eyes": "#5a3a22", "hairColor": "#8a8a8a" },
+  "equipment": {
+    "hair": "balding",
+    "beard": "longBeard",
+    "clothes": "robe",
+    "feet": { "item": "shoes", "color": "#3a2a4a" },
+    "head": "wizardHat",
+    "mainHand": "staff"
+  },
+  "expression": "sleepy"
+}

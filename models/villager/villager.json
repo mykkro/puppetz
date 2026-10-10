@@ -1,0 +1,14 @@
+{
+  "$schema": "../humanoid.schema.json",
+  "generator": "humanoid",
+  "id": "villager",
+  "name": "Village kid",
+  "description": "Generated humanoid: a small village girl in a dress, no equipment.",
+  "body": { "sex": "female", "age": 8, "height": 1, "girth": 1, "skin": "#ffe0c7", "eyes": "#3a5f9e", "hairColor": "#e2b060" },
+  "equipment": {
+    "hair": { "item": "bun" },
+    "clothes": { "item": "dress", "color": "#e07a5f", "accent": "#fff4e0" },
+    "feet": { "item": "shoes", "color": "#8a3a2a" }
+  },
+  "expression": "happy"
+}

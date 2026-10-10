@@ -1,0 +1,18 @@
+{
+  "$schema": "../humanoid.schema.json",
+  "generator": "humanoid",
+  "id": "knight",
+  "name": "Knight",
+  "description": "Generated humanoid: a young knight in plate armor with a cape, sword and round shield.",
+  "body": { "sex": "male", "age": 28, "height": 1, "girth": 1, "skin": "#f2c9a5", "eyes": "#3a5f9e", "hairColor": "#a8642a" },
+  "equipment": {
+    "hair": "short",
+    "clothes": { "item": "tunic", "color": "#2f5fa8", "accent": "#3b3b48" },
+    "armor": "plate",
+    "hands": "gauntlets",
+    "feet": "greaves",
+    "back": { "item": "cape", "color": "#a8323a" },
+    "mainHand": "sword",
+    "offHand": "roundShield"
+  }
+}
