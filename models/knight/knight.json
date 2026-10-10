@@ -11,7 +11,7 @@
     "armor": "plate",
     "hands": "gauntlets",
     "feet": "greaves",
-    "back": { "item": "cape", "color": "#a8323a" },
+    "cape": { "item": "cape", "color": "#a8323a" },
     "mainHand": "sword",
     "offHand": "roundShield"
   }

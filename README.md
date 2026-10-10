@@ -24,8 +24,8 @@ characters are included: **Alzák**, a green alien in a tin can, and a cartoon *
 
 **Humanoids.** RPG-style people are generated from a short recipe: a body (sex, age, height,
 girth, skin, eyes) plus items from a library in slots: hair, beard, clothes, armor, gloves,
-boots, headwear, cape or backpack, a weapon and a shield. Items are sized from the body, so any
-item fits any character, and they layer (clothes, then armor, then a cape). Every humanoid can
+boots, headwear, a cape, a backpack, a weapon and a shield. Items are sized from the body, so any
+item fits any character, and they layer (clothes, then armor, then a cape over it). Every humanoid can
 idle, walk, run, talk, fight and attack, and shows six expressions (neutral, happy, sad,
 agitated, angry, sleepy) on a separate face layer. Edit them live in the viewer's **Character**
 panel. See [docs/humanoids.md](docs/humanoids.md).

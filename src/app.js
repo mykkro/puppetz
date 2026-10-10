@@ -5,7 +5,7 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { buildCharacter } from './rig/character.js';
 import { RigController, findCharacterRoot } from './rig/controller.js';
 import { exportGLB } from './rig/exportGLB.js';
-import { BODY_OPTIONS, BODY_DEFAULTS, SKIN_TONES, HAIR_COLORS, SLOTS, itemsForSlot, resolveEquip } from './rig/humanoid.js';
+import { BODY_OPTIONS, BODY_DEFAULTS, SKIN_TONES, HAIR_COLORS, SLOTS, itemsForSlot, resolveEquip, migrateEquipment } from './rig/humanoid.js';
 
 const $ = (id) => document.getElementById(id);
 const params = new URLSearchParams(location.search);
@@ -360,6 +360,7 @@ addEventListener('drop', async (e) => {
 
 function showEditor(on) {
   $('editor').hidden = !on;
+  if (on) state.def.equipment = migrateEquipment(state.def.equipment);
   if (on) buildEditor();
 }
 

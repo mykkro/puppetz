@@ -32,6 +32,7 @@ export const SLOTS = [
   { key: 'beard', label: 'Beard' },
   { key: 'clothes', label: 'Clothes' },
   { key: 'armor', label: 'Armor' },
+  { key: 'cape', label: 'Cape' },
   { key: 'hands', label: 'Hands' },
   { key: 'feet', label: 'Feet' },
   { key: 'head', label: 'Head' },
@@ -73,6 +74,36 @@ function beard(ctx, m, chin) {
   if (chin) ctx.headShell('beard', m, R * 1.05, -112, 112, 122, 180);
   ctx.part({ name: 'moustache', bone: 'mouth', material: m, geometry: { type: 'tube', radius: r3(0.05 * R), tubularSegments: 20,
     points: [[-0.26 * R, -0.04 * R, 0.0], [-0.12 * R, 0.1 * R, 0.04 * R], [0, 0.11 * R, 0.05 * R], [0.12 * R, 0.1 * R, 0.04 * R], [0.26 * R, -0.04 * R, 0]].map(v3) } });
+}
+
+/**
+ * A cape hanging from the shoulders over everything worn so far. to: 'waist' | 'calves' | 'ankles';
+ * flare widens the hem, wrap > 1 brings the sides further forward, collar adds a raised collar.
+ * Every cape uses the "cape" joint, which the body clips swing while walking and running.
+ */
+function capeShape(ctx, o, { to, flare = 1, wrap = 1, collar = false }) {
+  const { d } = ctx;
+  const cloth = ctx.mat('cape', { texture: 'fabric', textureScale: 3, color: o.color, roughness: 0.85, doubleSided: true });
+  const clasp = ctx.mat('cape_clasp', { texture: 'metal', textureScale: 1, color: o.accent, metalness: 0.9, roughness: 0.3 });
+  const k = ctx.layer.torso;
+  const topR = d.shoulderX * k + d.armR * ctx.layer.arm * 0.9;
+  const len = { waist: d.chestLen + d.spineLen * 0.6, calves: d.top + d.thigh + d.shin * 0.5, ankles: d.top + d.thigh + d.shin * 0.92 }[to];
+  ctx.bone({ name: 'cape', parent: 'chest', position: [0, r3(d.chestLen - 0.02 * d.H), 0], tags: ['cloth'] });
+  // Wide enough to hang over whatever is worn below (hips, tunic skirts, tassets, robes) if it reaches that far.
+  const reachesHips = len > d.top * 0.9;
+  const lowR = Math.max(topR * 1.15, reachesHips ? d.hipR * k * 1.25 : 0, reachesHips ? (ctx.skirtR ?? 0) * 1.12 : 0) * flare;
+  const arc = 170 * wrap;
+  ctx.part({ name: 'capeCloth', bone: 'cape', material: cloth, scale: [1, 1, 0.85], geometry: { type: 'lathe', segments: 32, phiStart: r3(180 - arc / 2), phiLength: r3(arc),
+    points: [[lowR * 1.08, -len], [lowR, -len * 0.6], [Math.max(topR, lowR * 0.85), -len * 0.3], [topR * 0.82, 0.0], [topR * 0.45, 0.02 * d.H]].map(v3) } });
+  if (collar) {
+    const r = d.R * 0.62 * Math.max(1, k * 0.95);
+    ctx.part({ name: 'capeCollar', bone: 'cape', material: cloth, scale: [1, 1, 0.9], geometry: { type: 'lathe', segments: 28, phiStart: 90, phiLength: 180,
+      points: [[r, 0], [r * 1.08, 0.06 * d.H], [r * 1.2, 0.11 * d.H]].map(v3) } });
+  }
+  ctx.part({ name: 'capeClasp_L', bone: 'cape', material: clasp, mirror: true, position: v3([d.shoulderX * 0.55, -0.01 * d.H, d.chestR * k * d.depth * 0.75]),
+    geometry: { type: 'sphere', radius: r3(0.022 * d.G), widthSegments: 12, heightSegments: 8 } });
+  // How far the cape sits behind the chest, so a backpack goes over it.
+  ctx.capeBack = Math.max(topR * 0.82, Math.max(topR, lowR * 0.85) * 0.5) * 0.85 + 0.01;
 }
 
 const sleeve = (ctx, prefix, material, upperK, foreK, foreLen = 1) => {
@@ -511,32 +542,28 @@ export const ITEMS = {
     },
   },
 
-  // ------------------------------------------------ back (over everything)
+  // ------------------------------------------------ cape (over clothes and armor)
   cape: {
-    slot: 'back', label: 'Cape', colors: { color: '#a8323a', accent: '#e2b53e' },
-    build(ctx, o) {
-      const { d } = ctx;
-      const cloth = ctx.mat('cape', { texture: 'fabric', textureScale: 3, color: o.color, roughness: 0.85, doubleSided: true });
-      const clasp = ctx.mat('cape_clasp', { texture: 'metal', textureScale: 1, color: o.accent, metalness: 0.9, roughness: 0.3 });
-      const k = ctx.layer.torso;
-      const topR = d.shoulderX * k + d.armR * ctx.layer.arm * 0.9;
-      const len = d.top + d.thigh + d.shin * 0.5;
-      ctx.bone({ name: 'cape', parent: 'chest', position: [0, r3(d.chestLen - 0.02 * d.H), 0], tags: ['cloth'] });
-      // Wide enough to hang over whatever is worn below: hips, tunic skirts, tassets, robes.
-      const lowR = Math.max(topR * 1.15, d.hipR * k * 1.25, (ctx.skirtR ?? 0) * 1.12);
-      ctx.part({ name: 'capeCloth', bone: 'cape', material: cloth, scale: [1, 1, 0.85], geometry: { type: 'lathe', segments: 32, phiStart: 95, phiLength: 170,
-        points: [[lowR * 1.08, -len], [lowR, -len * 0.6], [Math.max(topR, lowR * 0.85), -len * 0.3], [topR * 0.82, 0.0], [topR * 0.45, 0.02 * d.H]].map(v3) } });
-      ctx.part({ name: 'capeClasp_L', bone: 'cape', material: clasp, mirror: true, position: v3([d.shoulderX * 0.55, -0.01 * d.H, d.chestR * k * d.depth * 0.75]),
-        geometry: { type: 'sphere', radius: r3(0.022 * d.G), widthSegments: 12, heightSegments: 8 } });
-    },
+    slot: 'cape', label: 'Cape', colors: { color: '#a8323a', accent: '#e2b53e' },
+    build(ctx, o) { capeShape(ctx, o, { to: 'calves' }); },
   },
+  shortCape: {
+    slot: 'cape', label: 'Short cape', colors: { color: '#2f4f8a', accent: '#c9ccd2' },
+    build(ctx, o) { capeShape(ctx, o, { to: 'waist' }); },
+  },
+  cloak: {
+    slot: 'cape', label: 'Cloak', colors: { color: '#4a4038', accent: '#a8642a' },
+    build(ctx, o) { capeShape(ctx, o, { to: 'ankles', flare: 1.25, wrap: 1.25, collar: true }); },
+  },
+
+  // ------------------------------------------------ back (over everything, the cape included)
   backpack: {
     slot: 'back', label: 'Backpack', colors: { color: '#8a6a3a', accent: '#5a3a22' },
     build(ctx, o) {
       const { d } = ctx;
       const canvas = ctx.mat('backpack', { texture: 'leather', textureScale: 2, color: o.color, roughness: 0.85 });
       const strap = ctx.mat('backpack_strap', { texture: 'leather', textureScale: 2, color: o.accent, roughness: 0.7 });
-      const back = ctx.torsoRadius(d.spineLen + d.chestLen * 0.45) * ctx.layer.torso * d.depth;
+      const back = Math.max(ctx.torsoRadius(d.spineLen + d.chestLen * 0.45) * ctx.layer.torso * d.depth, ctx.capeBack ?? 0);
       ctx.part({ name: 'pack', bone: 'chest', material: canvas, position: v3([0, d.chestLen * 0.3, -back - 0.07 * d.G]),
         geometry: { type: 'box', size: v3([0.22 * d.G, 0.26 * d.H, 0.13 * d.G]), radius: 0.03 } });
       ctx.part({ name: 'packFlap', bone: 'chest', material: strap, position: v3([0, d.chestLen * 0.3 + 0.1 * d.H, -back - 0.07 * d.G]),
@@ -657,6 +684,17 @@ export const ITEMS = {
 
 export function itemsForSlot(slot) {
   return Object.entries(ITEMS).filter(([, it]) => it.slot === slot).map(([id, it]) => ({ id, label: it.label, colors: it.colors }));
+}
+
+/** Recipes from before the cape slot wore capes in "back": move them to "cape". */
+export function migrateEquipment(equipment = {}) {
+  const eq = { ...equipment };
+  const back = typeof eq.back === 'string' ? eq.back : eq.back?.item;
+  if (ITEMS[back]?.slot === 'cape' && !eq.cape) {
+    eq.cape = eq.back;
+    delete eq.back;
+  }
+  return eq;
 }
 
 /**

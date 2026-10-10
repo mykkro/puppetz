@@ -3,16 +3,16 @@
 //
 //   { "generator": "humanoid", "id": "knight",
 //     "body": { "sex": "male", "age": 30, "height": 1, "girth": 1, "hair": "short", ... },
-//     "equipment": { "clothes": "tunic", "armor": "plate", "back": { "item": "cape", "color": "#b33" },
+//     "equipment": { "clothes": "tunic", "armor": "plate", "cape": { "item": "cape", "color": "#b33" },
 //                    "mainHand": "sword", "offHand": "roundShield" } }
 //
 // Items are functions of the body's measurements (see makeBody), so every item fits every body:
 // a child, a tall thin elf or a stout dwarf. Each item slot is a layer: clothes sit on the skin,
-// armor on the clothes, a cape over everything. Materials are named per item ("clothes",
+// armor on the clothes, a cape over the armor. Materials are named per item ("clothes",
 // "armor_metal", ...) so a texture can later be attached to one item without touching the rest.
-import { ITEMS, SLOTS, itemsForSlot, resolveEquip, mixColor } from './items.js';
+import { ITEMS, SLOTS, itemsForSlot, resolveEquip, migrateEquipment, mixColor } from './items.js';
 
-export { ITEMS, SLOTS, itemsForSlot, resolveEquip };
+export { ITEMS, SLOTS, itemsForSlot, resolveEquip, migrateEquipment };
 
 const clamp = (v, a, b) => Math.min(Math.max(v, a), b);
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -516,7 +516,7 @@ export function generateHumanoid(cfg) {
   const ctx = makeContext(cfg);
   buildBody(ctx);
 
-  const equipment = cfg.equipment ?? {};
+  const equipment = migrateEquipment(cfg.equipment);
   // Headwear goes on before hair so it can hide the top of the hair.
   const order = [...SLOTS.filter((s) => s.key !== 'hair' && s.key !== 'beard'), ...SLOTS.filter((s) => s.key === 'hair' || s.key === 'beard')];
   for (const { key } of order) {

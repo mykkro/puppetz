@@ -19,7 +19,7 @@ examples treat it like any other.
     "armor": "plate",
     "hands": "gauntlets",
     "feet": "greaves",
-    "back": { "item": "cape", "color": "#a8323a" },
+    "cape": { "item": "cape", "color": "#a8323a" },
     "mainHand": "sword",
     "offHand": "roundShield"
   },
@@ -63,7 +63,8 @@ Everything worn or carried is an **item** from the library in
 | `hands` | `gloves`, `gauntlets` |
 | `feet` | `shoes`, `boots`, `greaves` |
 | `head` | `helmet`, `hood`, `wizardHat`, `crown` |
-| `back` | `cape`, `backpack` |
+| `cape` | `cape` (to the calves), `shortCape` (to the waist), `cloak` (to the ankles, wider, with a collar) |
+| `back` | `backpack` (worn over the cape) |
 | `mainHand` | `sword`, `axe`, `spear`, `staff` (right hand) |
 | `offHand` | `roundShield`, `kiteShield` (left forearm) |
 
@@ -76,7 +77,7 @@ measurements: head radius and shape, limb lengths and thicknesses, the torso out
 helmet fits a child and a stout warrior, and the same cape hangs right on both.
 
 **Slots are layers.** They are built from the inside out: clothes on the skin, armor over the
-clothes, gloves and boots over sleeves and trousers, a cape over everything. Each layer records how
+clothes, a cape over the armor, a backpack over the cape, gloves and boots over sleeves and trousers. Each layer records how
 far out it reaches, so the next one goes around it: plate armor sits outside the tunic, and a cape
 widens to hang over tassets or a robe. Headwear can hide the top of the hair, so a helmet doesn't
 end up with hair poking through it.

@@ -244,6 +244,43 @@
             }
           ]
         },
+        "cape": {
+          "description": "Cape: cape, shortCape, cloak. A name, or { item, color, accent } to recolor it.",
+          "oneOf": [
+            {
+              "enum": [
+                "cape",
+                "shortCape",
+                "cloak",
+                "none"
+              ]
+            },
+            {
+              "type": "object",
+              "required": [
+                "item"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "item": {
+                  "enum": [
+                    "cape",
+                    "shortCape",
+                    "cloak"
+                  ]
+                },
+                "color": {
+                  "type": "string",
+                  "pattern": "^#[0-9a-fA-F]{6}$"
+                },
+                "accent": {
+                  "type": "string",
+                  "pattern": "^#[0-9a-fA-F]{6}$"
+                }
+              }
+            }
+          ]
+        },
         "hands": {
           "description": "Hands: gloves, gauntlets. A name, or { item, color, accent } to recolor it.",
           "oneOf": [
@@ -356,11 +393,10 @@
           ]
         },
         "back": {
-          "description": "Back: cape, backpack. A name, or { item, color, accent } to recolor it.",
+          "description": "Back: backpack. A name, or { item, color, accent } to recolor it.",
           "oneOf": [
             {
               "enum": [
-                "cape",
                 "backpack",
                 "none"
               ]
@@ -374,7 +410,6 @@
               "properties": {
                 "item": {
                   "enum": [
-                    "cape",
                     "backpack"
                   ]
                 },
